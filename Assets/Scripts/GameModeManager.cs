@@ -1,0 +1,58 @@
+using UnityEngine;
+
+public class GameModeManager : MonoBehaviour
+{
+    private GameController gameController;
+    private UIManager uiManager;
+
+    void Awake()
+    {
+        this.gameController = GameObject.FindGameObjectWithTag("game controller").GetComponent<GameController>();
+        this.uiManager = GameObject.FindGameObjectWithTag("UI Manager").GetComponent<UIManager>();
+    }
+
+    public void setupGameMode()
+    {
+        
+        if (gameController.mode == GameController.GameMode.Classic)
+        {
+            setupClassicMode();
+        } else if (gameController.mode == GameController.GameMode.Endless)
+        {
+            setupEndlessMode();
+        } else if (gameController.mode == GameController.GameMode.Adventure)
+        {
+            setupAdventureMode();
+        }
+    }
+
+    public bool timerEnabled = true;
+    public bool levelEnabled = true;
+
+    // ----------------CLASSIC-----------------
+    private void setupClassicMode()
+    {
+        timerEnabled = true;
+        levelEnabled = true;
+        uiManager.setLevel(true);
+        uiManager.setTimer(true);
+    }
+
+    // ----------------ENDLESS-----------------
+    private void setupEndlessMode()
+    {
+        timerEnabled = false;
+        levelEnabled = false;
+        uiManager.setLevel(false);
+        uiManager.setTimer(false);
+    }
+
+    // ---------------ADVENTURE----------------
+    private void setupAdventureMode()
+    {
+        timerEnabled = true;
+        levelEnabled = true;
+        uiManager.setLevel(true);
+        uiManager.setTimer(true);
+    }
+}
