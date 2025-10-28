@@ -53,7 +53,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI restartText;
     [SerializeField] private TextMeshProUGUI homeText;
 
-    private GameController.GameState gameStateBeforePause;
+    private Enums.GameState gameStateBeforePause;
     private bool confirmRestart = false;
     private bool confirmHome = false;
 
@@ -63,7 +63,7 @@ public class UIManager : MonoBehaviour
         pauseButton.SetActive(false);
         Time.timeScale = 0f;
         gameStateBeforePause = this.gameController.state;
-        gameController.setGameState(GameController.GameState.Pause);
+        gameController.setGameState(Enums.GameState.Pause);
     }
 
     public void PauseHome()
@@ -171,7 +171,7 @@ public class UIManager : MonoBehaviour
         Revive();
         revivePopupGO.SetActive(false);
         StopCoroutine(reviveCoroutine);
-        gameController.setGameState(GameController.GameState.PlayMode);
+        gameController.setGameState(Enums.GameState.PlayMode);
     }
 
     public void ReviveSpendGem()
@@ -180,7 +180,7 @@ public class UIManager : MonoBehaviour
         Revive();
         revivePopupGO.SetActive(false);
         StopCoroutine(reviveCoroutine);
-        gameController.setGameState(GameController.GameState.PlayMode);
+        gameController.setGameState(Enums.GameState.PlayMode);
     }
 
     private void Revive()
@@ -237,7 +237,7 @@ public class UIManager : MonoBehaviour
 
     private void StartGame()
     {
-        gameController.setGameState(GameController.GameState.PlayMode);
+        gameController.setGameState(Enums.GameState.PlayMode);
         clearUIForPlayMode();
         Time.timeScale = 1f;
         gameController.Start();
@@ -261,7 +261,7 @@ public class UIManager : MonoBehaviour
         clearUIForPlayMode();
         DOTween.KillAll();
         Time.timeScale = 1f;
-        gameController.setGameState(GameController.GameState.PlayMode);
+        gameController.setGameState(Enums.GameState.PlayMode);
         gameController.killCoroutines();
         gameController.Start();
     }
@@ -269,7 +269,7 @@ public class UIManager : MonoBehaviour
     private void Home()
     {
         Time.timeScale = 0f;
-        gameController.setGameState(GameController.GameState.MainMenu);
+        gameController.setGameState(Enums.GameState.MainMenu);
         gameController.killCoroutines();
         gameController.clearStuff();
         mainMenuGO.SetActive(true);

@@ -53,7 +53,7 @@ public class Grid : MonoBehaviour
             {
                 orbRect.anchoredPosition = targetPos;
             } // swap animation
-            else if (gameController.state == GameController.GameState.PlayMode)
+            else if (gameController.state == Enums.GameState.PlayMode)
             {
                 orbRect.DOAnchorPos(targetPos, 0.1f).SetEase(Ease.OutQuad);
             } // gravity drop animation

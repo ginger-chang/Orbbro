@@ -21,7 +21,7 @@ public class GameController : MonoBehaviour
     private Grid[,] board; 
     private int numMatches = 0;
 
-    public GameState state = GameState.MainMenu;
+    public Enums.GameState state = Enums.GameState.MainMenu;
     public GameMode mode = GameMode.Classic;
     public float dropTime = 0.24f;
 
@@ -30,16 +30,6 @@ public class GameController : MonoBehaviour
     private AudioManager audioManager;
     private UIManager uiManager;
     private GameModeManager gameModeManager;
-
-    public enum GameState
-    {
-        PlayMode,
-        Resolving,
-        GameOver,
-        Pause,
-        Revive,
-        MainMenu
-    }
 
     public enum GameMode
     {
@@ -96,7 +86,7 @@ public class GameController : MonoBehaviour
 
     void Update()
     {
-        if (state == GameState.PlayMode && gameModeManager.timerEnabled)
+        if (state == Enums.GameState.PlayMode && gameModeManager.timerEnabled)
         {
             timeRemaining -= Time.deltaTime;
             timeRemaining = Mathf.Max(0f, timeRemaining);
@@ -106,7 +96,7 @@ public class GameController : MonoBehaviour
             {
                 levelTimeUp();
             }
-        } else if (state == GameState.Pause || state == GameState.MainMenu)
+        } else if (state == Enums.GameState.Pause || state == Enums.GameState.MainMenu)
         {
             Time.timeScale = 0f;
         }
@@ -147,7 +137,7 @@ public class GameController : MonoBehaviour
 
     //----------------------PUBLIC (UI)-------------------------
 
-    public void setGameState(GameState state)
+    public void setGameState(Enums.GameState state)
     {
         this.state = state;
     }
@@ -219,12 +209,12 @@ public class GameController : MonoBehaviour
             if (!revived)
             {
                 uiManager.activateRevivePopup();
-                this.state = GameState.Revive;
+                this.state = Enums.GameState.Revive;
                 revived = true;
             } else
             {
                 Debug.Log("Game over!!!");
-                this.state = GameState.GameOver;
+                this.state = Enums.GameState.GameOver;
                 uiManager.GameOver();
             }
         }
@@ -234,7 +224,7 @@ public class GameController : MonoBehaviour
     {
         Debug.Log("revive in game controller!");
         timeRemaining = timeLimit;
-        this.state = GameState.PlayMode;
+        this.state = Enums.GameState.PlayMode;
         revived = true;
     }
 
@@ -244,7 +234,7 @@ public class GameController : MonoBehaviour
     // Called by drop orb, changes game state to resolving
     public void Resolve()
     {
-        this.state = GameState.Resolving;
+        this.state = Enums.GameState.Resolving;
         // set score parameters
         curScore = 0;
         curCombo = 0;
@@ -260,7 +250,7 @@ public class GameController : MonoBehaviour
             yield return StartCoroutine(DisappearAllMatches());
         }
         comboText.gameObject.SetActive(false);
-        this.state = GameState.PlayMode;
+        this.state = Enums.GameState.PlayMode;
     }
 
     // Make all matches disappear. (using destroy) will also do score calculations (to be coded)
