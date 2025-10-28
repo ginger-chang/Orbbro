@@ -68,7 +68,7 @@ public class GameController : MonoBehaviour
 
         this.rect = GetComponent<RectTransform>();
         board = new Grid[gridSize, gridSize];
-        CreateGrids();
+        CreateGridsClass.CreateGrids(gridPrefab, gridSize, gridLength, this.rect, board, ExistsMatch, gameAreaRect, dragLayerRect);
 
         gameModeManager.setupGameMode();
 
@@ -92,37 +92,6 @@ public class GameController : MonoBehaviour
     // load high score
     highScore = PlayerPrefs.GetInt("HighScore", 0);
         highScoreText.text = $"High score: {highScore}";
-    }
-
-    void CreateGrids()
-    {
-        for (int i = 0; i < gridSize; i ++)
-        {
-            for(int j = 0; j < gridSize; j ++)
-            {
-                // Creating a new Grid/orb
-                GameObject gridGO = Instantiate(gridPrefab);
-                gridGO.name = $"Grid[{i}, {j}]";
-                gridGO.transform.SetParent(this.rect);
-                Vector2 pos = new Vector2(i * gridLength, j * gridLength * -1);
-                gridGO.GetComponent<RectTransform>().anchoredPosition = pos;
-                gridGO.transform.localScale = Vector3.one;
-                Grid grid = gridGO.GetComponent<Grid>();
-                board[i, j] = grid;
-
-                // Prevent matches when creating initial grid
-                while (ExistsMatch())
-                {
-                    grid.orb.ChangeSuitRandom();
-                }
-
-                Orb orb = grid.orb;
-                if (orb != null)
-                {
-                    orb.SetRects(gameAreaRect, dragLayerRect);
-                }
-            }
-        }
     }
 
     void Update()
