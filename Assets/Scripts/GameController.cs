@@ -90,10 +90,10 @@ public class GameController : MonoBehaviour
 
     public void SetGameMode(GameMode mode) => this.mode = mode;
 
-    public void SelectSkill(SkillType skill)
+    public void SelectSkill(SkillOffer offer)
     {
         if (StateMachine.Current is SkillSelectState sss)
-            sss.SelectSkill(StateMachine.Ctx, skill);
+            sss.SelectSkill(StateMachine.Ctx, offer);
     }
 
     //---------------------LEVEL GOAL-----------------------

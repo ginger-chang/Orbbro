@@ -47,9 +47,9 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI skill2Text;
     [SerializeField] private TextMeshProUGUI skill3Text;
 
-    private SkillType[] _currentSkillOptions;
+    private SkillOffer[] _currentSkillOptions;
 
-    public void ShowSkillSelect(SkillType[] skills)
+    public void ShowSkillSelect(SkillOffer[] skills)
     {
         _currentSkillOptions = skills;
         SetSkillText(skill1Text, skills[0]);
@@ -63,9 +63,9 @@ public class UIManager : MonoBehaviour
     // Called by each skill button via Inspector (pass 0, 1, or 2)
     public void OnSkillSelected(int index) => gameController.SelectSkill(_currentSkillOptions[index]);
 
-    private void SetSkillText(TextMeshProUGUI label, SkillType skill)
+    private void SetSkillText(TextMeshProUGUI label, SkillOffer offer)
     {
-        label.text = $"<b>{SkillManager.GetDisplayName(skill)}</b>\n<size=70%>{SkillManager.GetDescription(skill)}</size>";
+        label.text = $"<b>{SkillManager.GetDisplayName(offer)}</b>\n<size=70%>{SkillManager.GetDescription(offer)}</size>";
     }
 
     private void RefreshMainMenuButtons()

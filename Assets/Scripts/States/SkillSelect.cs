@@ -24,9 +24,9 @@ public class SkillSelectState : IGameState
         ctx.UIManager.HideSkillSelect();
     }
 
-    public void SelectSkill(GameContext ctx, SkillType skill)
+    public void SelectSkill(GameContext ctx, SkillOffer offer)
     {
-        ctx.SkillManager.Apply(skill);
+        ctx.SkillManager.Apply(offer);
         ctx.StateMachine.ChangeState(new PlayModeState(_resumeTimeLimit, _resumeTimeLimit));
     }
 }
