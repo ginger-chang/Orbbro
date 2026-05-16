@@ -64,7 +64,8 @@ public class SkillManager
     public SkillOffer[] GetRandomSkills(int count)
     {
         var all = (SkillType[])Enum.GetValues(typeof(SkillType));
-        var result = new SkillOffer[count];
+        var result          = new SkillOffer[count];
+        var usedTypes       = new HashSet<SkillType>();
         var usedBiasColors  = new HashSet<int>();
         var usedClearColors = new HashSet<int>();
 
@@ -86,6 +87,11 @@ public class SkillManager
                     colorIndex = UnityEngine.Random.Range(0, 6);
                     if (usedClearColors.Contains(colorIndex)) continue;
                     usedClearColors.Add(colorIndex);
+                }
+                else
+                {
+                    if (usedTypes.Contains(type)) continue;
+                    usedTypes.Add(type);
                 }
 
                 result[i] = new SkillOffer { Type = type, ColorIndex = colorIndex };

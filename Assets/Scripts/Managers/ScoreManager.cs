@@ -153,6 +153,14 @@ public class ScoreManager : MonoBehaviour
         AnimateScoreBar();
     }
 
+    public void OnSkillApplied(SkillOffer offer)
+    {
+        if (offer.Type == SkillType.BaseMultiplier)
+            baseMultiplier = 100 + _skillManager.BaseMultiplierBonus;
+        else if (offer.Type == SkillType.ComboMultiplier)
+            comboMultiplier = 1.3f + _skillManager.ComboMultiplierBonus;
+    }
+
     public void HideComboText() => comboText.gameObject.SetActive(false);
 
     public void ApplyNoMatchPenalty()
