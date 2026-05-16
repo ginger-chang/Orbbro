@@ -29,8 +29,8 @@ public class Orb : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandl
     {
         this.image = GetComponent<Image>();
         this.rect = GetComponent<RectTransform>();
-        this.audioManager = GameObject.FindGameObjectWithTag("audio").GetComponent<AudioManager>();
-        this.gameController = GameObject.FindGameObjectWithTag("game controller").GetComponent<GameController>();
+        this.audioManager   = GameObject.FindGameObjectWithTag("audio").GetComponent<AudioManager>();
+        this.gameController = GameController.Instance;
         ChangeSuitRandom();
     }
 

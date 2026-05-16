@@ -17,7 +17,7 @@ public class Grid : MonoBehaviour
 
     void Awake()
     {
-        this.gameController = GameObject.FindGameObjectWithTag("game controller").GetComponent<GameController>();
+        this.gameController = GameController.Instance;
 
         assignOrb(GetComponentInChildren<Orb>());
 

@@ -7,7 +7,7 @@ public class GameModeManager : MonoBehaviour
 
     void Awake()
     {
-        this.gameController = GameObject.FindGameObjectWithTag("game controller").GetComponent<GameController>();
+        this.gameController = GameController.Instance;
         this.uiManager = GameObject.FindGameObjectWithTag("UI Manager").GetComponent<UIManager>();
     }
 

@@ -6,6 +6,8 @@ using DG.Tweening;
 [RequireComponent(typeof(ScoreManager))]
 public class GameController : MonoBehaviour
 {
+    public static GameController Instance { get; private set; }
+
     // FSM — _inspectorState mirrors the current state for the Unity Inspector
     public GameStateMachine StateMachine { get; private set; }
     [SerializeField] private string _inspectorState;
@@ -25,6 +27,7 @@ public class GameController : MonoBehaviour
 
     private void Awake()
     {
+        Instance        = this;
         audioManager    = GameObject.FindGameObjectWithTag("audio").GetComponent<AudioManager>();
         uiManager       = GameObject.FindGameObjectWithTag("UI Manager").GetComponent<UIManager>();
         gameModeManager = GameObject.FindGameObjectWithTag("Game Mode Manager").GetComponent<GameModeManager>();
