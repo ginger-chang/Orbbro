@@ -58,7 +58,7 @@ public class GameController : MonoBehaviour
         BoardManager.Initialize();
 
         gameModeManager.SetupGameMode();
-        scoreManager.ResetForNewGame();
+        scoreManager.ResetForNewGame(mode);
         revived = false;
     }
 

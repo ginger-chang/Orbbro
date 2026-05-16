@@ -32,9 +32,12 @@ public class ScoreManager : MonoBehaviour
     private int _highScore;
     private int _curLevelScoreGoal;
     private int _scoreGoal;
+    private string _highScoreKey;
 
-    public void ResetForNewGame()
+    public void ResetForNewGame(GameMode mode)
     {
+        _highScoreKey   = $"HighScore_{mode}";
+
         comboMultiplier = 1.3f;
         iterMultiplier  = 1.2f;
         baseMultiplier  = 100;
@@ -44,7 +47,7 @@ public class ScoreManager : MonoBehaviour
         _curCombo = 0;
         _curIter  = 0;
 
-        _highScore = PlayerPrefs.GetInt("HighScore", 0);
+        _highScore = PlayerPrefs.GetInt(_highScoreKey, 0);
         highScoreText.text = $"High score: {_highScore}";
         scoreText.text     = $"Score: {_score}";
         comboText.gameObject.SetActive(false);
@@ -105,7 +108,7 @@ public class ScoreManager : MonoBehaviour
         if (_score > _highScore)
         {
             _highScore = _score;
-            PlayerPrefs.SetInt("HighScore", _score);
+            PlayerPrefs.SetInt(_highScoreKey, _score);
             PlayerPrefs.Save();
             highScoreText.text = $"High score: {_highScore}";
         }
