@@ -1,6 +1,5 @@
 using DG.Tweening;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections;
@@ -53,17 +52,25 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI restartText;
     [SerializeField] private TextMeshProUGUI homeText;
 
-    private Enums.GameState gameStateBeforePause;
     private bool confirmRestart = false;
     private bool confirmHome = false;
 
     public void Pause()
     {
-        pauseMenuGO.SetActive(true);
         pauseButton.SetActive(false);
-        Time.timeScale = 0f;
-        gameStateBeforePause = this.gameController.state;
-        gameController.setGameState(Enums.GameState.Pause);
+        ShowPauseMenu();
+        gameController.StateMachine.PushState(new PauseState());
+    }
+
+    // Called by PauseState.Enter (if needed) or directly — keeps panel logic here
+    public void ShowPauseMenu()
+    {
+        pauseMenuGO.SetActive(true);
+    }
+
+    public void HidePauseMenu()
+    {
+        pauseMenuGO.SetActive(false);
     }
 
     public void PauseHome()
@@ -74,7 +81,8 @@ public class UIManager : MonoBehaviour
             homeButtonGO.GetComponent<Image>().color = Color.cornflowerBlue;
             homeText.text = "Home?";
             resetRestartButton();
-        } else
+        }
+        else
         {
             Home();
         }
@@ -83,8 +91,7 @@ public class UIManager : MonoBehaviour
     public void Resume()
     {
         clearUIForPlayMode();
-        Time.timeScale = 1f;
-        gameController.setGameState(gameStateBeforePause);
+        gameController.StateMachine.PopState();
     }
 
     public void PauseRestart()
@@ -95,9 +102,9 @@ public class UIManager : MonoBehaviour
             restartButtonGO.GetComponent<Image>().color = Color.cornflowerBlue;
             restartText.text = "Restart?";
             resetHomeButton();
-        } else
+        }
+        else
         {
-            // manually restart
             Restart();
         }
     }
@@ -155,37 +162,30 @@ public class UIManager : MonoBehaviour
     private IEnumerator reviveCountdown()
     {
         int seconds = 6;
-        while(seconds != 0)
+        while (seconds != 0)
         {
             reviveCountdownText.text = $"Skipping in {seconds}...";
             yield return new WaitForSeconds(1f);
             seconds--;
         }
         revivePopupGO.SetActive(false);
-        GameOver();
+        // Countdown expired — transition to GameOver via the FSM
+        gameController.StateMachine.ChangeState(new GameOverState());
     }
 
     public void ReviveWatchAd()
     {
         Debug.Log("watch an ad");
-        Revive();
-        revivePopupGO.SetActive(false);
         StopCoroutine(reviveCoroutine);
-        gameController.setGameState(Enums.GameState.PlayMode);
+        revivePopupGO.SetActive(false);
+        gameController.Revive();
     }
 
     public void ReviveSpendGem()
     {
         Debug.Log("spend some gems");
-        Revive();
-        revivePopupGO.SetActive(false);
         StopCoroutine(reviveCoroutine);
-        gameController.setGameState(Enums.GameState.PlayMode);
-    }
-
-    private void Revive()
-    {
-        Debug.Log("revive!!!!");
+        revivePopupGO.SetActive(false);
         gameController.Revive();
     }
 
@@ -237,10 +237,9 @@ public class UIManager : MonoBehaviour
 
     private void StartGame()
     {
-        gameController.setGameState(Enums.GameState.PlayMode);
         clearUIForPlayMode();
-        Time.timeScale = 1f;
         gameController.Start();
+        gameController.EnterPlayMode();
     }
 
     //---------------------HELPERS------------------------
@@ -260,18 +259,16 @@ public class UIManager : MonoBehaviour
     {
         clearUIForPlayMode();
         DOTween.KillAll();
-        Time.timeScale = 1f;
-        gameController.setGameState(Enums.GameState.PlayMode);
         gameController.killCoroutines();
         gameController.Start();
+        gameController.EnterPlayMode();
     }
 
     private void Home()
     {
-        Time.timeScale = 0f;
-        gameController.setGameState(Enums.GameState.MainMenu);
         gameController.killCoroutines();
         gameController.clearStuff();
+        gameController.StateMachine.ChangeState(new MainMenuState());
         mainMenuGO.SetActive(true);
         pauseButton.SetActive(false);
     }

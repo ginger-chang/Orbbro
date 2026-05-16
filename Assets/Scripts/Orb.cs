@@ -107,7 +107,7 @@ public class Orb : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandl
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if (gameController.state != Enums.GameState.PlayMode) return;
+        if (!gameController.StateMachine.IsInState<PlayModeState>()) return;
         validDrag = true;
         gameController.setOrbInSwap(this);
         // Drag layer 
@@ -122,7 +122,7 @@ public class Orb : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandl
     [Obsolete]
     public void OnDrag(PointerEventData eventData)
     {
-        if (gameController.state != Enums.GameState.PlayMode || !validDrag) return;
+        if (!gameController.StateMachine.IsInState<PlayModeState>() || !validDrag) return;
         // Set the dragging area to be within game area.
         float x = eventData.position.x;
         x = Math.Max(x, this.gameAreaMinX);
@@ -152,7 +152,7 @@ public class Orb : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandl
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        if (gameController.state != Enums.GameState.PlayMode || !validDrag) return;
+        if (!gameController.StateMachine.IsInState<PlayModeState>() || !validDrag) return;
         validDrag = false;
         gameController.setOrbInSwap(null);
         rect.position = startDragPos;

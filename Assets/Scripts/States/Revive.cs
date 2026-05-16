@@ -1,7 +1,11 @@
-public class Revive : BaseState
+public class ReviveState : IGameState
 {
-    void Entry()
+    public void Enter(GameContext ctx)
     {
-        stateController.gameStateDictionary.Add(Enums.GameState.Revive, this);
+        ctx.UIManager.activateRevivePopup();
     }
+
+    public void Tick(GameContext ctx) { }
+
+    public void Exit(GameContext ctx) { }
 }

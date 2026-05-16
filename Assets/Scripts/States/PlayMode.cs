@@ -1,7 +1,44 @@
-public class PlayMode : BaseState
+using UnityEngine;
+
+public class PlayModeState : IGameState
 {
-    void Entry()
+    private float _timeLimit;
+    private float _timeRemaining;
+
+    public PlayModeState(float timeLimit, float timeRemaining)
     {
-        stateController.gameStateDictionary.Add(Enums.GameState.PlayMode, this);
+        _timeLimit = timeLimit;
+        _timeRemaining = timeRemaining;
+    }
+
+    public void Enter(GameContext ctx)
+    {
+        Time.timeScale = 1f;
+    }
+
+    public void Tick(GameContext ctx)
+    {
+        if (!ctx.GameModeManager.timerEnabled) return;
+
+        _timeRemaining -= Time.deltaTime;
+        _timeRemaining = Mathf.Max(0f, _timeRemaining);
+        ctx.GameController.timerBar.value = _timeRemaining / _timeLimit;
+
+        if (_timeRemaining <= 0f)
+        {
+            ctx.GameController.LevelTimeUp();
+        }
+    }
+
+    public void Exit(GameContext ctx) { }
+
+    // GameController reads these when setting up the next level
+    public float TimeRemaining => _timeRemaining;
+    public float TimeLimit => _timeLimit;
+
+    public void ResetTimer(float timeLimit)
+    {
+        _timeLimit = timeLimit;
+        _timeRemaining = timeLimit;
     }
 }

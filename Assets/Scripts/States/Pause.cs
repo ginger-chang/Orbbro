@@ -1,7 +1,17 @@
-public class Pause : BaseState
+using UnityEngine;
+
+public class PauseState : IGameState
 {
-    void Entry()
+    public void Enter(GameContext ctx)
     {
-        stateController.gameStateDictionary.Add(Enums.GameState.Pause, this);
+        Time.timeScale = 0f;
+        ctx.UIManager.ShowPauseMenu();
+    }
+
+    public void Tick(GameContext ctx) { }
+
+    public void Exit(GameContext ctx)
+    {
+        ctx.UIManager.HidePauseMenu();
     }
 }

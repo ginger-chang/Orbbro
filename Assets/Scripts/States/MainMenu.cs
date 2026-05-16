@@ -1,7 +1,13 @@
-public class MainMenu : BaseState
+using UnityEngine;
+
+public class MainMenuState : IGameState
 {
-    void Entry()
+    public void Enter(GameContext ctx)
     {
-        stateController.gameStateDictionary.Add(Enums.GameState.MainMenu, this);
+        Time.timeScale = 0f;
     }
+
+    public void Tick(GameContext ctx) { }
+
+    public void Exit(GameContext ctx) { }
 }

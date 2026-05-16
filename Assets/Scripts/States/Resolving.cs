@@ -1,7 +1,11 @@
-public class Resolving : BaseState
+public class ResolvingState : IGameState
 {
-    void Entry()
+    public void Enter(GameContext ctx)
     {
-        stateController.gameStateDictionary.Add(Enums.GameState.Resolving, this);
+        ctx.GameController.StartResolveCoroutine();
     }
+
+    public void Tick(GameContext ctx) { }
+
+    public void Exit(GameContext ctx) { }
 }

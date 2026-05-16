@@ -1,7 +1,11 @@
-public class GameOver : BaseState
+public class GameOverState : IGameState
 {
-    void Entry()
+    public void Enter(GameContext ctx)
     {
-        stateController.gameStateDictionary.Add(Enums.GameState.GameOver, this);
+        ctx.UIManager.GameOver();
     }
+
+    public void Tick(GameContext ctx) { }
+
+    public void Exit(GameContext ctx) { }
 }

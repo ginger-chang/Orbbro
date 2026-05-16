@@ -18,10 +18,13 @@ public class GameController : MonoBehaviour
     private int gridSize = 6;
     private int gridLength = 167;
 
-    private Grid[,] board; 
+    private Grid[,] board;
     private int numMatches = 0;
 
-    public Enums.GameState state = Enums.GameState.MainMenu;
+    // FSM — _inspectorState mirrors the current state for the Unity Inspector
+    public GameStateMachine StateMachine { get; private set; }
+    [SerializeField] private Enums.GameState _inspectorState;
+
     public GameMode mode = GameMode.Classic;
     public float dropTime = 0.24f;
 
@@ -30,6 +33,11 @@ public class GameController : MonoBehaviour
     private AudioManager audioManager;
     private UIManager uiManager;
     private GameModeManager gameModeManager;
+
+    // Timer values owned here so states and coroutines can share them
+    private float _currentTimeLimit;
+    private float _savedTimeRemaining;      // captured before entering Resolving
+    private bool _levelAdvancedDuringResolve; // set by levelGoalReached during a resolve pass
 
     public enum GameMode
     {
@@ -48,9 +56,20 @@ public class GameController : MonoBehaviour
         this.audioManager = GameObject.FindGameObjectWithTag("audio").GetComponent<AudioManager>();
         this.uiManager = GameObject.FindGameObjectWithTag("UI Manager").GetComponent<UIManager>();
         this.gameModeManager = GameObject.FindGameObjectWithTag("Game Mode Manager").GetComponent<GameModeManager>();
-        Time.timeScale = 0f;
+
+        var ctx = new GameContext
+        {
+            GameController = this,
+            UIManager = uiManager,
+            AudioManager = audioManager,
+            GameModeManager = gameModeManager
+        };
+        StateMachine = new GameStateMachine(ctx, new MainMenuState());
+        ctx.StateMachine = StateMachine;
     }
 
+    // Called by Unity on first frame, and again by UIManager when starting/restarting a game.
+    // Does not transition to PlayMode itself — UIManager calls EnterPlayMode() after.
     public void Start()
     {
         clearStuff();
@@ -62,8 +81,6 @@ public class GameController : MonoBehaviour
 
         gameModeManager.setupGameMode();
 
-        
-        // resetting level and score.
         curLevel = 1;
         score = 0;
         curLevelScoreGoal = 0;
@@ -74,56 +91,40 @@ public class GameController : MonoBehaviour
 
         revived = false;
 
-        // (for adventure mode) resetting skills and multipliers
         comboMultiplier = 1.3f;
         iterMultiplier = 1.2f;
         baseMultiplier = 100;
 
-    // load high score
-    highScore = PlayerPrefs.GetInt("HighScore", 0);
+        highScore = PlayerPrefs.GetInt("HighScore", 0);
         highScoreText.text = $"High score: {highScore}";
+    }
+
+    // UIManager calls this after Start() to enter PlayMode with the correct timer values.
+    public void EnterPlayMode()
+    {
+        StateMachine.ChangeState(new PlayModeState(_currentTimeLimit, _currentTimeLimit));
     }
 
     void Update()
     {
-        if (state == Enums.GameState.PlayMode && gameModeManager.timerEnabled)
-        {
-            timeRemaining -= Time.deltaTime;
-            timeRemaining = Mathf.Max(0f, timeRemaining);
-            timerBar.value = timeRemaining / timeLimit;
-
-            if (timeRemaining <= 0)
-            {
-                levelTimeUp();
-            }
-        } else if (state == Enums.GameState.Pause || state == Enums.GameState.MainMenu)
-        {
-            Time.timeScale = 0f;
-        }
-        // if in ui mode (such as pause and main menu and stuff, don't make time move)
+        StateMachine.Tick();
+        _inspectorState = StateMachine.CurrentStateName;
     }
 
     //-----------------------RESTARTING-------------------------
 
     public void clearStuff()
     {
-        if (board == null)
+        if (board == null) return;
+        for (int i = 0; i < gridSize; i++)
         {
-            return;
-        }
-        // 1. clear all grids and orbs
-        for (int i = 0; i < gridSize; i ++)
-        {
-            for(int j = 0; j < gridSize; j ++)
+            for (int j = 0; j < gridSize; j++)
             {
                 Grid grid = board[i, j];
                 if (grid != null)
                 {
                     Orb orb = grid.orb;
-                    if (orb != null)
-                    {
-                        GameObject.Destroy(orb.gameObject);
-                    }
+                    if (orb != null) GameObject.Destroy(orb.gameObject);
                     GameObject.Destroy(grid.gameObject);
                 }
             }
@@ -133,13 +134,6 @@ public class GameController : MonoBehaviour
     public void killCoroutines()
     {
         StopAllCoroutines();
-    }
-
-    //----------------------PUBLIC (UI)-------------------------
-
-    public void setGameState(Enums.GameState state)
-    {
-        this.state = state;
     }
 
     public void setGameMode(GameMode mode)
@@ -152,8 +146,6 @@ public class GameController : MonoBehaviour
     public int curLevel;
     private int curLevelScoreGoal = 0;
     public int scoreGoal = 0;
-    private float timeLimit = 0f;
-    private float timeRemaining = 0f;
 
     public Slider timerBar;
     public TextMeshProUGUI levelText;
@@ -164,10 +156,8 @@ public class GameController : MonoBehaviour
         LevelParams levelParams = new LevelParams(curLevel);
         curLevelScoreGoal = levelParams.scoreGoal;
         scoreGoal += levelParams.scoreGoal;
-        timeLimit = levelParams.timeLimit;
-        timeRemaining = timeLimit;
+        _currentTimeLimit = levelParams.timeLimit;
 
-        // set up ui
         timerBar.value = 1;
         levelText.text = $"Level {curLevel}";
 
@@ -177,11 +167,18 @@ public class GameController : MonoBehaviour
             scoreBarMaskPadding.w = 1000;
             scoreBarMask.padding = scoreBarMaskPadding;
         }
+
+        // If already in PlayMode (level advance mid-game), reset the timer in-place
+        if (StateMachine.Current is PlayModeState playState)
+        {
+            playState.ResetTimer(_currentTimeLimit);
+        }
     }
 
     private void levelGoalReached()
     {
         curLevel++;
+        _levelAdvancedDuringResolve = true;
         setupLevel();
     }
 
@@ -195,50 +192,52 @@ public class GameController : MonoBehaviour
         orbInSwap = orb;
     }
 
-    private void levelTimeUp()
+    // Called by PlayModeState.Tick when the timer hits zero
+    public void LevelTimeUp()
     {
-        // TODO: Forcibly stop swapping, then resolve again, then if level isn't reached then game over.
         if (orbInSwap != null)
         {
             orbInSwap.curGrid.assignOrb(orbInSwap, "just go there");
             orbInSwap.validDrag = false;
             Resolve();
-        } else
+        }
+        else if (!revived)
         {
-            // TODO: revival chance
-            if (!revived)
-            {
-                uiManager.activateRevivePopup();
-                this.state = Enums.GameState.Revive;
-                revived = true;
-            } else
-            {
-                Debug.Log("Game over!!!");
-                this.state = Enums.GameState.GameOver;
-                uiManager.GameOver();
-            }
+            revived = true;
+            StateMachine.ChangeState(new ReviveState());
+        }
+        else
+        {
+            StateMachine.ChangeState(new GameOverState());
         }
     }
 
+    // Called by UIManager revive buttons
     public void Revive()
     {
         Debug.Log("revive in game controller!");
-        timeRemaining = timeLimit;
-        this.state = Enums.GameState.PlayMode;
         revived = true;
+        StateMachine.ChangeState(new PlayModeState(_currentTimeLimit, _currentTimeLimit));
     }
-
 
     //--------------------RESOLVING-------------------------
 
-    // Called by drop orb, changes game state to resolving
     public void Resolve()
     {
-        this.state = Enums.GameState.Resolving;
-        // set score parameters
+        // Capture the remaining time before the state exits
+        if (StateMachine.Current is PlayModeState ps)
+            _savedTimeRemaining = ps.TimeRemaining;
+
         curScore = 0;
         curCombo = 0;
         curIter = 0;
+        _levelAdvancedDuringResolve = false;
+        StateMachine.ChangeState(new ResolvingState());
+    }
+
+    // Called by ResolvingState.Enter — keeps coroutine ownership on the MonoBehaviour
+    public void StartResolveCoroutine()
+    {
         StartCoroutine(ResolveEnumerator());
     }
 
@@ -250,28 +249,29 @@ public class GameController : MonoBehaviour
             yield return StartCoroutine(DisappearAllMatches());
         }
         comboText.gameObject.SetActive(false);
-        this.state = Enums.GameState.PlayMode;
+
+        // If a level advanced during this resolve pass, start the new level with a fresh timer.
+        // Otherwise restore the timer from before the player dropped the orb.
+        float resumeTime = _levelAdvancedDuringResolve ? _currentTimeLimit : _savedTimeRemaining;
+        _levelAdvancedDuringResolve = false;
+        StateMachine.ChangeState(new PlayModeState(_currentTimeLimit, resumeTime));
     }
 
-    // Make all matches disappear. (using destroy) will also do score calculations (to be coded)
     public IEnumerator DisappearAllMatches()
     {
-        // update score parameters
         curIter++;
 
         UpdateMatches();
-        for(int matchId = 1; matchId <= numMatches; matchId ++)
+        for (int matchId = 1; matchId <= numMatches; matchId++)
         {
-            // for every match
             curCombo++;
             int numOrb = 0;
-            for(int i = 0; i < gridSize; i ++)
+            for (int i = 0; i < gridSize; i++)
             {
-                for(int j = 0; j < gridSize; j ++)
+                for (int j = 0; j < gridSize; j++)
                 {
                     if (matches[i, j] == matchId)
                     {
-                        // for every orb in a match
                         Destroy(board[i, j].orb.gameObject);
                         numOrb++;
                     }
@@ -306,7 +306,7 @@ public class GameController : MonoBehaviour
         scoreText.text = $"Score: {score}";
 
         comboText.gameObject.SetActive(true);
-        comboText.text = $"Combo x{curCombo}";        
+        comboText.text = $"Combo x{curCombo}";
 
         if (score > highScore)
         {
@@ -326,65 +326,36 @@ public class GameController : MonoBehaviour
             float scoreBarOffset = 1000 * ((float)numerator / (float)denominator);
             var seq = DOTween.Sequence();
             seq.Append(DOTween.To(
-            () => padding.w,
-            x =>
-            {
-                padding.w = x;
-                scoreBarMask.padding = padding;
-            },
-            0f,
-            0.25f
-            ));
-            seq.AppendCallback(() => {
-                padding.w = 1000f;
-                scoreBarMask.padding = padding;
-            });
+                () => padding.w,
+                x => { padding.w = x; scoreBarMask.padding = padding; },
+                0f, 0.25f));
+            seq.AppendCallback(() => { padding.w = 1000f; scoreBarMask.padding = padding; });
             seq.Append(DOTween.To(
-            () => padding.w,
-            x =>
-            {
-                padding.w = x;
-                scoreBarMask.padding = padding;
-            },
-            scoreBarOffset,
-            0.25f
-            ));
-        } else
+                () => padding.w,
+                x => { padding.w = x; scoreBarMask.padding = padding; },
+                scoreBarOffset, 0.25f));
+        }
+        else
         {
-            // update score bar ui
             int numerator = scoreGoal - score;
             int denominator = curLevelScoreGoal;
             float scoreBarOffset = 1000 * ((float)numerator / (float)denominator);
-
-            
-            //padding.w = scoreBarOffset;
-            //scoreBarMask.padding = padding;
-
             DOTween.To(
-            () => padding.w,
-            x =>
-            {
-                padding.w = x;
-                scoreBarMask.padding = padding;
-            },
-            scoreBarOffset,
-            0.5f
-            );
+                () => padding.w,
+                x => { padding.w = x; scoreBarMask.padding = padding; },
+                scoreBarOffset, 0.5f);
         }
     }
 
-    // Fills the board, calls drop new orbs and drop existing orbs
     public IEnumerator FillBoard()
     {
         DropExistingOrbs();
-
         yield return StartCoroutine(DropNewOrbs());
         yield return new WaitForSeconds(0.2f);
     }
 
     public IEnumerator DropNewOrbs()
     {
-        // TODO: extract this part maybe!?
         int[] countNewOrbsNeeded = new int[gridSize];
         int maxCount = 0;
         for (int i = 0; i < gridSize; i++)
@@ -392,25 +363,21 @@ public class GameController : MonoBehaviour
             int count = 0;
             for (int j = 0; j < gridSize; j++)
             {
-                if (matches[i, j] > 0)
-                {
-                    count++;
-                }
+                if (matches[i, j] > 0) count++;
             }
             countNewOrbsNeeded[i] = count;
             maxCount = Math.Max(maxCount, count);
         }
 
-        for(int iter = 0; iter < maxCount; iter ++)
+        for (int iter = 0; iter < maxCount; iter++)
         {
-            for(int i = 0; i < gridSize; i ++)
+            for (int i = 0; i < gridSize; i++)
             {
                 if (countNewOrbsNeeded[i] >= 1)
                 {
                     GameObject orbGO = Instantiate(orbPrefab);
                     Orb orb = orbGO.GetComponent<Orb>();
                     orb.SetRects(gameAreaRect, dragLayerRect);
-                    // assign orb to a grid
                     board[i, countNewOrbsNeeded[i] - 1].assignOrb(orb, "", countNewOrbsNeeded[i], true);
                     countNewOrbsNeeded[i]--;
                 }
@@ -421,39 +388,29 @@ public class GameController : MonoBehaviour
 
     void DropExistingOrbs()
     {
-        for(int i = 0; i < gridSize; i ++)
+        for (int i = 0; i < gridSize; i++)
         {
             int dropCount = 0;
-            for(int j = gridSize - 1; j >= 0; j --) // from bottom to top
+            for (int j = gridSize - 1; j >= 0; j--)
             {
                 if (board[i, j].orb == null)
-                {
                     dropCount++;
-                } else
-                {
+                else
                     board[i, j + dropCount].assignOrb(board[i, j].orb, "", dropCount);
-                }
             }
         }
     }
 
-
-
-    // Detect Match, returns true if there is match
     public bool ExistsMatch()
     {
         UpdateMatches();
         foreach (int i in matches)
         {
-            if (i != 0)
-            {
-                return true;
-            }
+            if (i != 0) return true;
         }
         return false;
     }
-    
-    // Detect Match, reads the current board and returns a 2d array mask of the matches
+
     public void UpdateMatches()
     {
         bool matchExist = false;
@@ -462,59 +419,42 @@ public class GameController : MonoBehaviour
         bool[,] visited = new bool[gridSize, gridSize];
         Queue<(int x, int y)> queue = new Queue<(int, int)>();
         clearMatchesHint();
-        // get 下＆右
-        for (int i = 0; i < gridSize; i ++)
+
+        for (int i = 0; i < gridSize; i++)
         {
-            for(int j = 0; j < gridSize; j ++)
+            for (int j = 0; j < gridSize; j++)
             {
-                if (board[i, j] == null)
-                {
-                    continue;
-                }
+                if (board[i, j] == null) continue;
                 Orb orb = board[i, j].orb;
                 Orb.Suits curSuit = orb.suit;
                 queue.Clear();
-                if (curSuit == Orb.Suits.none || visited[i, j])
-                {
-                    continue;
-                } else
-                {
-                    queue.Enqueue((i, j));
-                    while(queue.Count != 0)
-                    {
-                        var pos = queue.Dequeue();
-                        int x = pos.x;
-                        int y = pos.y;
+                if (curSuit == Orb.Suits.none || visited[i, j]) continue;
 
-                        if (visited[x, y])
-                        {
-                            continue;
-                        }
-                        int up = findMatchUp(curSuit, x, y);
-                        int down = findMatchDown(curSuit, x, y);
-                        int left = findMatchLeft(curSuit, x, y);
-                        int right = findMatchRight(curSuit, x, y);
+                queue.Enqueue((i, j));
+                while (queue.Count != 0)
+                {
+                    var pos = queue.Dequeue();
+                    int x = pos.x;
+                    int y = pos.y;
+                    if (visited[x, y]) continue;
 
-                        visited[x, y] = true;
-                        // draw matches
-                        (matches, matchExist) = drawMatches(matches, ref queue, matchId, x, y, up, down, left, right);
-                    }
-                    if (matchExist)
-                    {
-                        this.numMatches = matchId;
-                        matchId++;
-                    }
+                    int up = findMatchUp(curSuit, x, y);
+                    int down = findMatchDown(curSuit, x, y);
+                    int left = findMatchLeft(curSuit, x, y);
+                    int right = findMatchRight(curSuit, x, y);
+
+                    visited[x, y] = true;
+                    (matches, matchExist) = drawMatches(matches, ref queue, matchId, x, y, up, down, left, right);
                 }
-
+                if (matchExist)
+                {
+                    this.numMatches = matchId;
+                    matchId++;
+                }
             }
         }
     }
 
-
-
-    // Update match helpers
-
-    // Draw the matches to the match board (coming from a single grid)
     (int[,], bool) drawMatches(int[,] matches, ref Queue<(int x, int y)> queue, int id, int x, int y, int up, int down, int left, int right)
     {
         bool match = false;
@@ -522,135 +462,53 @@ public class GameController : MonoBehaviour
         {
             match = true;
             matches[x, y] = id;
-            // up
-            for (int k = 1; k <= up; k++)
-            {
-                matches[x, y - k] = id;
-                queue.Enqueue((x, y - k));
-                board[x, y - k].setMatch(id);
-            }
-            // down
-            for (int k = 1; k <= down; k++)
-            {
-                matches[x, y + k] = id;
-                queue.Enqueue((x, y + k));
-                board[x, y + k].setMatch(id);
-            }
+            for (int k = 1; k <= up; k++) { matches[x, y - k] = id; queue.Enqueue((x, y - k)); board[x, y - k].setMatch(id); }
+            for (int k = 1; k <= down; k++) { matches[x, y + k] = id; queue.Enqueue((x, y + k)); board[x, y + k].setMatch(id); }
         }
         if (left + right >= 2)
         {
             match = true;
             matches[x, y] = id;
-            // left
-            for (int k = 1; k <= left; k ++)
-            {
-                matches[x - k, y] = id;
-                queue.Enqueue((x - k, y));
-                board[x - k, y].setMatch(id);
-            }
-            // right
-            for (int k = 1; k <= right; k++)
-            {
-                matches[x + k, y] = id;
-                queue.Enqueue((x + k, y));
-                board[x + k, y].setMatch(id);
-            }
+            for (int k = 1; k <= left; k++) { matches[x - k, y] = id; queue.Enqueue((x - k, y)); board[x - k, y].setMatch(id); }
+            for (int k = 1; k <= right; k++) { matches[x + k, y] = id; queue.Enqueue((x + k, y)); board[x + k, y].setMatch(id); }
         }
         return (matches, match);
     }
 
     int findMatchUp(Orb.Suits suit, int i, int j)
     {
-        int x = i;
-        int y = j - 1;
-        int rtn = 0;
-        while(y >= 0)
-        {
-            if (board[x, y] != null && board[x, y].orb.suit == suit)
-            {
-                rtn++;
-                y--;
-            } else
-            {
-                break;
-            }
-        }
+        int x = i; int y = j - 1; int rtn = 0;
+        while (y >= 0) { if (board[x, y] != null && board[x, y].orb.suit == suit) { rtn++; y--; } else break; }
         return rtn;
     }
 
     int findMatchDown(Orb.Suits suit, int i, int j)
     {
-        int x = i;
-        int y = j + 1;
-        int rtn = 0;
-        while (y < gridSize)
-        {
-            if (board[x, y] != null && board[x, y].orb.suit == suit)
-            {
-                rtn++;
-                y++;
-            }
-            else
-            {
-                break;
-            }
-        }
+        int x = i; int y = j + 1; int rtn = 0;
+        while (y < gridSize) { if (board[x, y] != null && board[x, y].orb.suit == suit) { rtn++; y++; } else break; }
         return rtn;
     }
 
     int findMatchLeft(Orb.Suits suit, int i, int j)
     {
-        int x = i - 1;
-        int y = j;
-        int rtn = 0;
-        while (x >= 0)
-        {
-            if (board[x, y] != null && board[x, y].orb.suit == suit)
-            {
-                rtn++;
-                x--;
-            }
-            else
-            {
-                break;
-            }
-        }
+        int x = i - 1; int y = j; int rtn = 0;
+        while (x >= 0) { if (board[x, y] != null && board[x, y].orb.suit == suit) { rtn++; x--; } else break; }
         return rtn;
     }
 
     int findMatchRight(Orb.Suits suit, int i, int j)
     {
-        int x = i + 1;
-        int y = j;
-        int rtn = 0;
-        while (x < gridSize)
-        {
-            if (board[x, y] != null && board[x, y].orb.suit == suit)
-            {
-                rtn++;
-                x++;
-            }
-            else
-            {
-                break;
-            }
-        }
+        int x = i + 1; int y = j; int rtn = 0;
+        while (x < gridSize) { if (board[x, y] != null && board[x, y].orb.suit == suit) { rtn++; x++; } else break; }
         return rtn;
     }
 
-
-    
-
     //----------------------DEBUG--------------------------
 
-    // DEBUG HELPERS, not used in game
     void printArray(int[] arr)
     {
         string line = "";
-        for (int x = 0; x < arr.GetLength(0); x++)
-        {
-            line += arr[x].ToString().PadLeft(2) + " ";
-        }
+        for (int x = 0; x < arr.GetLength(0); x++) line += arr[x].ToString().PadLeft(2) + " ";
         Debug.Log(line);
     }
 
@@ -659,27 +517,19 @@ public class GameController : MonoBehaviour
         Debug.Log("print array: ");
         int width = arr.GetLength(0);
         int height = arr.GetLength(1);
-
-        for (int y = 0; y < height; y++) // from top row to bottom row
+        for (int y = 0; y < height; y++)
         {
             string line = "";
-            for (int x = 0; x < width; x++)
-            {
-                line += arr[x, y].ToString().PadLeft(2) + " ";
-            }
+            for (int x = 0; x < width; x++) line += arr[x, y].ToString().PadLeft(2) + " ";
             Debug.Log(line);
         }
     }
 
     void clearMatchesHint()
     {
-        for(int i = 0; i < gridSize; i ++)
-        {
-            for (int j = 0; j < gridSize; j ++)
-            {
-                if (board[i, j] != null) { board[i, j].setMatch(0); }
-            }
-        }
+        for (int i = 0; i < gridSize; i++)
+            for (int j = 0; j < gridSize; j++)
+                if (board[i, j] != null) board[i, j].setMatch(0);
     }
 
     void printOrbBoard()
@@ -688,15 +538,7 @@ public class GameController : MonoBehaviour
         {
             string line = "";
             for (int i = 0; i < gridSize; i++)
-            {
-                if (board[i, j].orb == null)
-                {
-                    line += "NULL ";
-                } else
-                {
-                    line += board[i, j].orb.name.PadLeft(2) + " ";
-                }
-            }
+                line += (board[i, j].orb == null ? "NULL" : board[i, j].orb.name.PadLeft(2)) + " ";
             Debug.Log(line);
         }
     }
