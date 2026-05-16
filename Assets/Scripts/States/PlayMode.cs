@@ -22,7 +22,7 @@ public class PlayModeState : IGameState
 
         _timeRemaining -= Time.deltaTime;
         _timeRemaining = Mathf.Max(0f, _timeRemaining);
-        ctx.GameController.timerBar.value = _timeRemaining / _timeLimit;
+        ctx.ScoreManager.timerBar.value = _timeRemaining / _timeLimit;
 
         if (_timeRemaining <= 0f)
         {

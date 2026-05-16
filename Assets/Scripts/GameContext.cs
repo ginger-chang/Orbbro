@@ -5,4 +5,6 @@ public class GameContext
     public AudioManager AudioManager;
     public GameModeManager GameModeManager;
     public GameStateMachine StateMachine;
+    public BoardManager BoardManager;
+    public ScoreManager ScoreManager;
 }
