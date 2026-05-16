@@ -38,6 +38,9 @@ public class ScoreManager : MonoBehaviour
     private int _scoreGoal;
     private string _highScoreKey;
 
+    private Tween _warningTween;
+    private Color _timerBarNormalColor;
+
     private void Awake()
     {
         Diamonds = PlayerPrefs.GetInt("Diamonds", 0);
@@ -151,6 +154,22 @@ public class ScoreManager : MonoBehaviour
 
         scoreText.text = $"Score: {_score}";
         AnimateScoreBar();
+    }
+
+    public void StartTimerWarning()
+    {
+        if (_warningTween != null && _warningTween.IsActive()) return;
+        var fill = timerBar.fillRect.GetComponent<Image>();
+        _timerBarNormalColor = fill.color;
+        _warningTween = fill.DOColor(Color.red, 0.4f).SetLoops(-1, LoopType.Yoyo);
+    }
+
+    public void StopTimerWarning()
+    {
+        if (_warningTween == null) return;
+        _warningTween.Kill();
+        _warningTween = null;
+        timerBar.fillRect.GetComponent<Image>().color = _timerBarNormalColor;
     }
 
     private void AnimateScoreBar()

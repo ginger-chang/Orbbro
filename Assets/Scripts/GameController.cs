@@ -90,7 +90,10 @@ public class GameController : MonoBehaviour
     {
         _levelAdvancedDuringResolve = true;
         if (StateMachine.Current is PlayModeState ps)
+        {
+            scoreManager.StopTimerWarning();
             ps.ResetTimer(scoreManager.CurrentTimeLimit);
+        }
         if (scoreManager.CurrentLevel % 5 == 0
             && (mode == GameMode.Classic || mode == GameMode.Adventure))
             _spawnDiamondOnNextFill = true;
