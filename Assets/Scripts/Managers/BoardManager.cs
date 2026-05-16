@@ -42,9 +42,18 @@ public class BoardManager : MonoBehaviour
         }
     }
 
-    public bool ExistsMatch() => _matchDetector.ExistsMatch(Board);
+    public bool ExistsMatch() => _matchDetector.ExistsMatch(GetSuitsArray());
 
-    public void UpdateMatches() => _matchDetector.UpdateMatches(Board);
+    public void UpdateMatches() => _matchDetector.UpdateMatches(GetSuitsArray());
+
+    private Orb.Suits[,] GetSuitsArray()
+    {
+        var suits = new Orb.Suits[_gridSize, _gridSize];
+        for (int i = 0; i < _gridSize; i++)
+            for (int j = 0; j < _gridSize; j++)
+                suits[i, j] = Board[i, j]?.orb?.suit ?? Orb.Suits.none;
+        return suits;
+    }
 
     // Destroys all orbs belonging to matchId, returns the count destroyed.
     public int DestroyMatchedOrbs(int matchId)
