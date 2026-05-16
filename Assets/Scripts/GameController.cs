@@ -102,6 +102,7 @@ public class GameController : MonoBehaviour
         {
             orbInSwap.curGrid.AssignOrb(orbInSwap, "just go there");
             orbInSwap.validDrag = false;
+            orbInSwap = null;
             Resolve();
         }
         else if (!revived)
