@@ -3,7 +3,7 @@
     "references": [
         "Unity.TextMeshPro",
         "Unity.ugui",
-        "DOTween"
+        "DOTweenModules"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

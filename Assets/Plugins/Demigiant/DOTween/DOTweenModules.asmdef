@@ -1,5 +1,5 @@
 {
-    "name": "DOTween",
+    "name": "DOTweenModules",
     "references": [
         "Unity.ugui",
         "Unity.TextMeshPro"
