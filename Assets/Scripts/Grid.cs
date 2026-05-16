@@ -59,7 +59,7 @@ public class Grid : MonoBehaviour
             } // gravity drop animation
             else
             {
-                float dropTime = gameController.dropTime;
+                float dropTime = gameController.BoardManager.dropTime;
                 if (newOrb)
                 {
                     orb.transform.localScale = Vector3.one;

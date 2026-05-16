@@ -15,7 +15,7 @@ public class GameController : MonoBehaviour
     private AudioManager audioManager;
     private UIManager uiManager;
     private GameModeManager gameModeManager;
-    private BoardManager boardManager;
+    public BoardManager BoardManager { get; private set; }
     private ScoreManager scoreManager;
 
     private float _savedTimeRemaining;
@@ -30,7 +30,7 @@ public class GameController : MonoBehaviour
         audioManager    = GameObject.FindGameObjectWithTag("audio").GetComponent<AudioManager>();
         uiManager       = GameObject.FindGameObjectWithTag("UI Manager").GetComponent<UIManager>();
         gameModeManager = GameObject.FindGameObjectWithTag("Game Mode Manager").GetComponent<GameModeManager>();
-        boardManager    = GetComponent<BoardManager>();
+        BoardManager    = GetComponent<BoardManager>();
         scoreManager    = GetComponent<ScoreManager>();
 
         var ctx = new GameContext
@@ -39,7 +39,7 @@ public class GameController : MonoBehaviour
             UIManager       = uiManager,
             AudioManager    = audioManager,
             GameModeManager = gameModeManager,
-            BoardManager    = boardManager,
+            BoardManager    = BoardManager,
             ScoreManager    = scoreManager
         };
         StateMachine    = new GameStateMachine(ctx, new MainMenuState());
@@ -52,9 +52,9 @@ public class GameController : MonoBehaviour
     // Does not transition to PlayMode — UIManager calls EnterPlayMode() after.
     public void Start()
     {
-        boardManager.ClearBoard();
+        BoardManager.ClearBoard();
         DOTween.KillAll();
-        boardManager.Initialize();
+        BoardManager.Initialize();
 
         gameModeManager.setupGameMode();
         scoreManager.ResetForNewGame();
@@ -77,10 +77,6 @@ public class GameController : MonoBehaviour
     public void killCoroutines() => StopAllCoroutines();
 
     public void setGameMode(GameMode mode) => this.mode = mode;
-
-    // Pass-throughs for callers that only have a GameController reference
-    public void clearStuff() => boardManager.ClearBoard();
-    public float dropTime   => boardManager.dropTime;
 
     //---------------------LEVEL GOAL-----------------------
 
@@ -142,7 +138,7 @@ public class GameController : MonoBehaviour
     public IEnumerator ResolveEnumerator()
     {
         yield return new WaitForSeconds(0.1f);
-        while (boardManager.ExistsMatch())
+        while (BoardManager.ExistsMatch())
         {
             yield return StartCoroutine(DisappearAllMatches());
         }
@@ -158,15 +154,15 @@ public class GameController : MonoBehaviour
     private IEnumerator DisappearAllMatches()
     {
         scoreManager.BeginIteration();
-        boardManager.UpdateMatches();
+        BoardManager.UpdateMatches();
 
-        for (int matchId = 1; matchId <= boardManager.NumMatches; matchId++)
+        for (int matchId = 1; matchId <= BoardManager.NumMatches; matchId++)
         {
-            int numOrb = boardManager.DestroyMatchedOrbs(matchId);
+            int numOrb = BoardManager.DestroyMatchedOrbs(matchId);
             audioManager.PlayDisappearSFX();
             scoreManager.AddMatchScore(numOrb);
             yield return new WaitForSeconds(0.5f);
         }
-        yield return StartCoroutine(boardManager.FillBoard());
+        yield return StartCoroutine(BoardManager.FillBoard());
     }
 }

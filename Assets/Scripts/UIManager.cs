@@ -267,7 +267,7 @@ public class UIManager : MonoBehaviour
     private void Home()
     {
         gameController.killCoroutines();
-        gameController.clearStuff();
+        gameController.BoardManager.ClearBoard();
         gameController.StateMachine.ChangeState(new MainMenuState());
         mainMenuGO.SetActive(true);
         pauseButton.SetActive(false);
