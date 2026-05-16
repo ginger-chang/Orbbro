@@ -1,9 +1,8 @@
 {
-    "name": "Orbbro",
+    "name": "DOTween",
     "references": [
-        "Unity.TextMeshPro",
         "Unity.ugui",
-        "DOTween"
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
