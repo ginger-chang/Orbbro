@@ -3,6 +3,7 @@ using System.Collections.Generic;
 public class GameStateMachine
 {
     public IGameState Current { get; private set; }
+    public GameContext Ctx => _ctx;
     private readonly Stack<IGameState> _stack = new Stack<IGameState>();
     private readonly GameContext _ctx;
 

@@ -41,6 +41,8 @@ public class ScoreManager : MonoBehaviour
     private Tween _warningTween;
     private Color _timerBarNormalColor;
 
+    private SkillManager _skillManager;
+
     private void Awake()
     {
         Diamonds = PlayerPrefs.GetInt("Diamonds", 0);
@@ -58,13 +60,14 @@ public class ScoreManager : MonoBehaviour
         if (diamondText != null) diamondText.text = $"Diamonds: {Diamonds}";
     }
 
-    public void ResetForNewGame(GameMode mode)
+    public void ResetForNewGame(GameMode mode, SkillManager skillManager = null)
     {
+        _skillManager   = skillManager;
         _highScoreKey   = $"HighScore_{mode}";
 
-        comboMultiplier = 1.3f;
+        comboMultiplier = 1.3f + (skillManager?.ComboMultiplierBonus ?? 0f);
         iterMultiplier  = 1.2f;
-        baseMultiplier  = 100;
+        baseMultiplier  = 100 + (skillManager?.BaseMultiplierBonus ?? 0);
 
         _score    = 0;
         _curScore = 0;
@@ -105,7 +108,7 @@ public class ScoreManager : MonoBehaviour
     public void BeginResolve()
     {
         _curScore = 0;
-        _curCombo = 0;
+        _curCombo = _skillManager?.StartingCombo ?? 0;
         _curIter  = 0;
     }
 
@@ -113,13 +116,23 @@ public class ScoreManager : MonoBehaviour
     public void BeginIteration() => _curIter++;
 
     // Called once per match group within an iteration
-    public void AddMatchScore(int numOrb)
+    public void AddMatchScore(int numOrb, Orb.Suits suit = Orb.Suits.none)
     {
         _curCombo++;
         float s = _curScore * comboMultiplier
                   + numOrb * baseMultiplier
                     * Mathf.Pow(comboMultiplier, _curCombo - 1)
                     * Mathf.Pow(iterMultiplier,  _curIter  - 1);
+
+        if (_skillManager != null)
+        {
+            if (numOrb >= 5 && _skillManager.MatchFiveBonusMultiplier > 0f)
+                s *= 1f + _skillManager.MatchFiveBonusMultiplier;
+
+            int suitIndex = (int)suit - 1;
+            if (suitIndex >= 0 && suitIndex < 6 && _skillManager.ColorClearMultipliers[suitIndex] > 0f)
+                s *= 1f + _skillManager.ColorClearMultipliers[suitIndex];
+        }
 
         int newCurScore = Mathf.FloorToInt(s);
         _score    += newCurScore - _curScore;

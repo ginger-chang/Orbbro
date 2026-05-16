@@ -39,6 +39,35 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI endlessButtonText;
     [SerializeField] private TextMeshProUGUI adventureButtonText;
 
+    //--------------------SKILL SELECT------------------------
+
+    [Header("---Skill Select---")]
+    [SerializeField] private GameObject skillSelectGO;
+    [SerializeField] private TextMeshProUGUI skill1Text;
+    [SerializeField] private TextMeshProUGUI skill2Text;
+    [SerializeField] private TextMeshProUGUI skill3Text;
+
+    private SkillType[] _currentSkillOptions;
+
+    public void ShowSkillSelect(SkillType[] skills)
+    {
+        _currentSkillOptions = skills;
+        SetSkillText(skill1Text, skills[0]);
+        SetSkillText(skill2Text, skills[1]);
+        SetSkillText(skill3Text, skills[2]);
+        skillSelectGO.SetActive(true);
+    }
+
+    public void HideSkillSelect() => skillSelectGO.SetActive(false);
+
+    // Called by each skill button via Inspector (pass 0, 1, or 2)
+    public void OnSkillSelected(int index) => gameController.SelectSkill(_currentSkillOptions[index]);
+
+    private void SetSkillText(TextMeshProUGUI label, SkillType skill)
+    {
+        label.text = $"<b>{SkillManager.GetDisplayName(skill)}</b>\n<size=70%>{SkillManager.GetDescription(skill)}</size>";
+    }
+
     private void RefreshMainMenuButtons()
     {
         SetModeButtonText(classicButtonText,   "Classic",   GameMode.Classic);

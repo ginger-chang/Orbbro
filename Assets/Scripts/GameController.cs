@@ -19,10 +19,12 @@ public class GameController : MonoBehaviour
     private GameModeManager gameModeManager;
     public BoardManager BoardManager { get; private set; }
     private ScoreManager scoreManager;
+    public SkillManager SkillManager { get; private set; }
 
     private float _savedTimeRemaining;
     private bool _levelAdvancedDuringResolve;
     private bool _spawnDiamondOnNextFill;
+    private bool _pendingSkillSelect;
 
     //--------------------STARTING------------------------
 
@@ -34,6 +36,7 @@ public class GameController : MonoBehaviour
         gameModeManager = GameObject.FindGameObjectWithTag("Game Mode Manager").GetComponent<GameModeManager>();
         BoardManager    = GetComponent<BoardManager>();
         scoreManager    = GetComponent<ScoreManager>();
+        SkillManager    = new SkillManager();
 
         var ctx = new GameContext
         {
@@ -42,7 +45,8 @@ public class GameController : MonoBehaviour
             AudioManager    = audioManager,
             GameModeManager = gameModeManager,
             BoardManager    = BoardManager,
-            ScoreManager    = scoreManager
+            ScoreManager    = scoreManager,
+            SkillManager    = SkillManager
         };
         StateMachine    = new GameStateMachine(ctx, new MainMenuState());
         ctx.StateMachine = StateMachine;
@@ -58,9 +62,11 @@ public class GameController : MonoBehaviour
         DOTween.KillAll();
         BoardManager.Initialize();
 
+        SkillManager.Reset();
+        _pendingSkillSelect = false;
         gameModeManager.SetupGameMode();
-        scoreManager.ResetForNewGame(mode);
-        revived = false;
+        scoreManager.ResetForNewGame(mode, SkillManager);
+        revivedCount = 0;
     }
 
     public void EnterPlayMode()
@@ -84,6 +90,12 @@ public class GameController : MonoBehaviour
 
     public void SetGameMode(GameMode mode) => this.mode = mode;
 
+    public void SelectSkill(SkillType skill)
+    {
+        if (StateMachine.Current is SkillSelectState sss)
+            sss.SelectSkill(StateMachine.Ctx, skill);
+    }
+
     //---------------------LEVEL GOAL-----------------------
 
     private void OnLevelGoalReached()
@@ -97,12 +109,14 @@ public class GameController : MonoBehaviour
         if (scoreManager.CurrentLevel % 5 == 0
             && (mode == GameMode.Classic || mode == GameMode.Adventure))
             _spawnDiamondOnNextFill = true;
+        if (mode == GameMode.Adventure && scoreManager.CurrentLevel % 3 == 0)
+            _pendingSkillSelect = true;
     }
 
     //---------------------GAME OVER & REVIVAL-----------------------
 
     private Orb orbInSwap;
-    private bool revived;
+    private int revivedCount;
 
     public void SetOrbInSwap(Orb orb) => orbInSwap = orb;
 
@@ -116,9 +130,9 @@ public class GameController : MonoBehaviour
             orbInSwap = null;
             Resolve();
         }
-        else if (!revived)
+        else if (revivedCount == 0 || SkillManager.ExtraLives >= revivedCount)
         {
-            revived = true;
+            revivedCount++;
             StateMachine.ChangeState(new ReviveState());
         }
         else
@@ -130,7 +144,6 @@ public class GameController : MonoBehaviour
     public void Revive()
     {
         Debug.Log("revive!");
-        revived = true;
         StateMachine.ChangeState(new PlayModeState(scoreManager.CurrentTimeLimit, scoreManager.CurrentTimeLimit));
     }
 
@@ -166,7 +179,16 @@ public class GameController : MonoBehaviour
             ? scoreManager.CurrentTimeLimit
             : _savedTimeRemaining;
         _levelAdvancedDuringResolve = false;
-        StateMachine.ChangeState(new PlayModeState(scoreManager.CurrentTimeLimit, resumeTime));
+
+        if (_pendingSkillSelect)
+        {
+            _pendingSkillSelect = false;
+            StateMachine.ChangeState(new SkillSelectState(scoreManager.CurrentTimeLimit));
+        }
+        else
+        {
+            StateMachine.ChangeState(new PlayModeState(scoreManager.CurrentTimeLimit, resumeTime));
+        }
     }
 
     private IEnumerator DisappearAllMatches()
@@ -176,9 +198,9 @@ public class GameController : MonoBehaviour
 
         for (int matchId = 1; matchId <= BoardManager.NumMatches; matchId++)
         {
-            var (numOrb, numDiamonds) = BoardManager.DestroyMatchedOrbs(matchId);
+            var (numOrb, numDiamonds, suit) = BoardManager.DestroyMatchedOrbs(matchId);
             audioManager.PlayDisappearSFX();
-            scoreManager.AddMatchScore(numOrb);
+            scoreManager.AddMatchScore(numOrb, suit);
             if (numDiamonds > 0) scoreManager.CollectDiamonds(numDiamonds);
             yield return new WaitForSeconds(0.5f);
         }

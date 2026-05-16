@@ -45,10 +45,21 @@ public class Orb : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandl
 
     public void ChangeSuitRandom()
     {
+        var weights = gameController?.SkillManager?.OrbColorWeights;
+        if (weights != null)
+        {
+            int total = 0;
+            foreach (int w in weights) total += w;
+            int roll = UnityEngine.Random.Range(0, total);
+            int cumulative = 0;
+            for (int i = 0; i < weights.Length; i++)
+            {
+                cumulative += weights[i];
+                if (roll < cumulative) { ChangeSuit((Suits)(i + 1)); return; }
+            }
+        }
         int rand = UnityEngine.Random.Range(1, 7);
-        var suits = Enum.GetValues(typeof(Suits));
-        Suits randSuit = (Suits)suits.GetValue(rand);
-        ChangeSuit(randSuit);
+        ChangeSuit((Suits)Enum.GetValues(typeof(Suits)).GetValue(rand));
     }
 
     // Change the color

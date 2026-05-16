@@ -55,23 +55,25 @@ public class BoardManager : MonoBehaviour
         return suits;
     }
 
-    // Destroys all orbs belonging to matchId, returns (orbCount, diamondCount).
-    public (int orbCount, int diamondCount) DestroyMatchedOrbs(int matchId)
+    // Destroys all orbs belonging to matchId, returns (orbCount, diamondCount, suit).
+    public (int orbCount, int diamondCount, Orb.Suits suit) DestroyMatchedOrbs(int matchId)
     {
         int count = 0, diamonds = 0;
+        Orb.Suits suit = Orb.Suits.none;
         for (int i = 0; i < _gridSize; i++)
         {
             for (int j = 0; j < _gridSize; j++)
             {
                 if (Matches[i, j] == matchId)
                 {
+                    suit = Board[i, j].orb.suit;
                     if (Board[i, j].orb.IsDiamond) diamonds++;
                     Destroy(Board[i, j].orb.gameObject);
                     count++;
                 }
             }
         }
-        return (count, diamonds);
+        return (count, diamonds, suit);
     }
 
     public IEnumerator FillBoard(bool spawnDiamond = false)

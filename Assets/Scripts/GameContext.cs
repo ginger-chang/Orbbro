@@ -7,4 +7,5 @@ public class GameContext
     public GameStateMachine StateMachine;
     public BoardManager BoardManager;
     public ScoreManager ScoreManager;
+    public SkillManager SkillManager;
 }
