@@ -58,11 +58,10 @@ public class UIManager : MonoBehaviour
     public void Pause()
     {
         pauseButton.SetActive(false);
-        ShowPauseMenu();
         gameController.StateMachine.PushState(new PauseState());
+        // PauseState.Enter calls ShowPauseMenu
     }
 
-    // Called by PauseState.Enter (if needed) or directly — keeps panel logic here
     public void ShowPauseMenu()
     {
         pauseMenuGO.SetActive(true);
