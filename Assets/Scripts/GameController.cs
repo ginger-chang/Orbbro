@@ -139,11 +139,16 @@ public class GameController : MonoBehaviour
     public IEnumerator ResolveEnumerator()
     {
         yield return new WaitForSeconds(0.1f);
+        bool anyMatch = false;
         while (BoardManager.ExistsMatch())
         {
+            anyMatch = true;
             yield return StartCoroutine(DisappearAllMatches());
         }
         scoreManager.HideComboText();
+
+        if (!anyMatch && (mode == GameMode.Classic || mode == GameMode.Adventure))
+            scoreManager.ApplyNoMatchPenalty();
 
         float resumeTime = _levelAdvancedDuringResolve
             ? scoreManager.CurrentTimeLimit

@@ -118,6 +118,20 @@ public class ScoreManager : MonoBehaviour
 
     public void HideComboText() => comboText.gameObject.SetActive(false);
 
+    public void ApplyNoMatchPenalty()
+    {
+        int penalty       = Mathf.FloorToInt(_curLevelScoreGoal * 0.2f);
+        int levelProgress = _score - (_scoreGoal - _curLevelScoreGoal);
+
+        if (levelProgress <= penalty)
+            _score = _scoreGoal - _curLevelScoreGoal;
+        else
+            _score -= penalty;
+
+        scoreText.text = $"Score: {_score}";
+        AnimateScoreBar();
+    }
+
     private void AnimateScoreBar()
     {
         var padding = scoreBarMask.padding;
