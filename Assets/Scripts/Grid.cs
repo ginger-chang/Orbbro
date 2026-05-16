@@ -19,7 +19,7 @@ public class Grid : MonoBehaviour
     {
         this.gameController = GameController.Instance;
 
-        assignOrb(GetComponentInChildren<Orb>());
+        AssignOrb(GetComponentInChildren<Orb>());
 
         this.rect = this.GetComponent<RectTransform>();
 
@@ -28,7 +28,7 @@ public class Grid : MonoBehaviour
     }
 
     // Assign and orb to this grid, includes animation: swap (in play mode), drop (existing orbs) (new orbs)
-    public void assignOrb(Orb orb, string flag = "", int dropGridCount = 1, bool newOrb = false)
+    public void AssignOrb(Orb orb, string flag = "", int dropGridCount = 1, bool newOrb = false)
     {
         if (orb == null)
         {
@@ -36,7 +36,7 @@ public class Grid : MonoBehaviour
         }
         else
         {
-            orb.setParent(this);
+            orb.SetParent(this);
             this.orb = orb;
             orb.parentGrid = this;
             RectTransform orbRect = orb.GetComponent<RectTransform>();

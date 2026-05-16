@@ -108,7 +108,7 @@ public class Orb : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandl
     {
         if (!gameController.StateMachine.IsInState<PlayModeState>()) return;
         validDrag = true;
-        gameController.setOrbInSwap(this);
+        gameController.SetOrbInSwap(this);
         // Drag layer 
         transform.SetParent(dragLayerRect);
         startDragPos = rect.position;
@@ -137,7 +137,7 @@ public class Orb : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandl
             {
                 audioManager.PlaySwapSFX();
                 Orb otherOrb = grid.orb;
-                curGrid.assignOrb(otherOrb);
+                curGrid.AssignOrb(otherOrb);
                 curGrid = grid;
             }
         }
@@ -147,12 +147,12 @@ public class Orb : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandl
     {
         if (!gameController.StateMachine.IsInState<PlayModeState>() || !validDrag) return;
         validDrag = false;
-        gameController.setOrbInSwap(null);
+        gameController.SetOrbInSwap(null);
         rect.position = startDragPos;
         // Remove from drag layer
 
         // Finish drag
-        curGrid.assignOrb(this, "just go there");
+        curGrid.AssignOrb(this, "just go there");
         // later: add trigger coroutine for resolving
         //gameController.GetMatches();
         gameController.Resolve();
@@ -167,7 +167,7 @@ public class Orb : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandl
     //-------------------------HELPERS------------------------------
 
     // HELPERS, Called by Grid I believe
-    public void setParent(Grid grid)
+    public void SetParent(Grid grid)
     {
         transform.SetParent(grid.transform, true);
     }

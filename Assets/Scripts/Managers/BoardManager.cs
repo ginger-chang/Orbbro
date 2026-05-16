@@ -90,7 +90,7 @@ public class BoardManager : MonoBehaviour
                 if (Board[i, j].orb == null)
                     dropCount++;
                 else
-                    Board[i, j + dropCount].assignOrb(Board[i, j].orb, "", dropCount);
+                    Board[i, j + dropCount].AssignOrb(Board[i, j].orb, "", dropCount);
             }
         }
     }
@@ -117,7 +117,7 @@ public class BoardManager : MonoBehaviour
                     GameObject orbGO = Instantiate(orbPrefab);
                     Orb orb = orbGO.GetComponent<Orb>();
                     orb.SetRects(gameAreaRect, dragLayerRect);
-                    Board[i, countNeeded[i] - 1].assignOrb(orb, "", countNeeded[i], true);
+                    Board[i, countNeeded[i] - 1].AssignOrb(orb, "", countNeeded[i], true);
                     countNeeded[i]--;
                 }
             }

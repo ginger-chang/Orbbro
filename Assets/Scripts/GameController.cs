@@ -57,7 +57,7 @@ public class GameController : MonoBehaviour
         DOTween.KillAll();
         BoardManager.Initialize();
 
-        gameModeManager.setupGameMode();
+        gameModeManager.SetupGameMode();
         scoreManager.ResetForNewGame();
         revived = false;
     }
@@ -75,9 +75,9 @@ public class GameController : MonoBehaviour
 
     //----------------------HELPERS-------------------------
 
-    public void killCoroutines() => StopAllCoroutines();
+    public void KillCoroutines() => StopAllCoroutines();
 
-    public void setGameMode(GameMode mode) => this.mode = mode;
+    public void SetGameMode(GameMode mode) => this.mode = mode;
 
     //---------------------LEVEL GOAL-----------------------
 
@@ -93,14 +93,14 @@ public class GameController : MonoBehaviour
     private Orb orbInSwap;
     private bool revived;
 
-    public void setOrbInSwap(Orb orb) => orbInSwap = orb;
+    public void SetOrbInSwap(Orb orb) => orbInSwap = orb;
 
     // Called by PlayModeState.Tick when the timer hits zero
     public void LevelTimeUp()
     {
         if (orbInSwap != null)
         {
-            orbInSwap.curGrid.assignOrb(orbInSwap, "just go there");
+            orbInSwap.curGrid.AssignOrb(orbInSwap, "just go there");
             orbInSwap.validDrag = false;
             Resolve();
         }

@@ -33,12 +33,12 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject backgroundMaskGO;
     [SerializeField] private GameObject levelTextGO;
 
-    public void setTimer(bool active)
+    public void SetTimer(bool active)
     {
         timerBarGO.SetActive(active);
     }
 
-    public void setLevel(bool active)
+    public void SetLevel(bool active)
     {
         backgroundMaskGO.GetComponent<RectMask2D>().enabled = active;
         levelTextGO.SetActive(active);
@@ -89,7 +89,7 @@ public class UIManager : MonoBehaviour
 
     public void Resume()
     {
-        clearUIForPlayMode();
+        ClearUIForPlayMode();
         gameController.StateMachine.PopState();
     }
 
@@ -218,32 +218,32 @@ public class UIManager : MonoBehaviour
 
     public void ClassicMode()
     {
-        gameController.setGameMode(GameMode.Classic);
+        gameController.SetGameMode(GameMode.Classic);
         StartGame();
     }
 
     public void EndlessMode()
     {
-        gameController.setGameMode(GameMode.Endless);
+        gameController.SetGameMode(GameMode.Endless);
         StartGame();
     }
 
     public void AdventureMode()
     {
-        gameController.setGameMode(GameMode.Adventure);
+        gameController.SetGameMode(GameMode.Adventure);
         StartGame();
     }
 
     private void StartGame()
     {
-        clearUIForPlayMode();
+        ClearUIForPlayMode();
         gameController.Start();
         gameController.EnterPlayMode();
     }
 
     //---------------------HELPERS------------------------
 
-    public void clearUIForPlayMode()
+    public void ClearUIForPlayMode()
     {
         mainMenuGO.SetActive(false);
         pauseMenuGO.SetActive(false);
@@ -256,16 +256,16 @@ public class UIManager : MonoBehaviour
 
     private void Restart()
     {
-        clearUIForPlayMode();
+        ClearUIForPlayMode();
         DOTween.KillAll();
-        gameController.killCoroutines();
+        gameController.KillCoroutines();
         gameController.Start();
         gameController.EnterPlayMode();
     }
 
     private void Home()
     {
-        gameController.killCoroutines();
+        gameController.KillCoroutines();
         gameController.BoardManager.ClearBoard();
         gameController.StateMachine.ChangeState(new MainMenuState());
         mainMenuGO.SetActive(true);

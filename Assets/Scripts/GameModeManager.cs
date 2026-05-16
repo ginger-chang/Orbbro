@@ -11,18 +11,18 @@ public class GameModeManager : MonoBehaviour
         this.uiManager = GameObject.FindGameObjectWithTag("UI Manager").GetComponent<UIManager>();
     }
 
-    public void setupGameMode()
+    public void SetupGameMode()
     {
         
         if (gameController.mode == GameMode.Classic)
         {
-            setupClassicMode();
+            SetupClassicMode();
         } else if (gameController.mode == GameMode.Endless)
         {
-            setupEndlessMode();
+            SetupEndlessMode();
         } else if (gameController.mode == GameMode.Adventure)
         {
-            setupAdventureMode();
+            SetupAdventureMode();
         }
     }
 
@@ -30,29 +30,29 @@ public class GameModeManager : MonoBehaviour
     public bool levelEnabled = true;
 
     // ----------------CLASSIC-----------------
-    private void setupClassicMode()
+    private void SetupClassicMode()
     {
         timerEnabled = true;
         levelEnabled = true;
-        uiManager.setLevel(true);
-        uiManager.setTimer(true);
+        uiManager.SetLevel(true);
+        uiManager.SetTimer(true);
     }
 
     // ----------------ENDLESS-----------------
-    private void setupEndlessMode()
+    private void SetupEndlessMode()
     {
         timerEnabled = false;
         levelEnabled = false;
-        uiManager.setLevel(false);
-        uiManager.setTimer(false);
+        uiManager.SetLevel(false);
+        uiManager.SetTimer(false);
     }
 
     // ---------------ADVENTURE----------------
-    private void setupAdventureMode()
+    private void SetupAdventureMode()
     {
         timerEnabled = true;
         levelEnabled = true;
-        uiManager.setLevel(true);
-        uiManager.setTimer(true);
+        uiManager.SetLevel(true);
+        uiManager.SetTimer(true);
     }
 }
