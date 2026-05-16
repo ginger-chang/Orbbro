@@ -219,19 +219,19 @@ public class UIManager : MonoBehaviour
 
     public void ClassicMode()
     {
-        gameController.setGameMode(GameController.GameMode.Classic);
+        gameController.setGameMode(GameMode.Classic);
         StartGame();
     }
 
     public void EndlessMode()
     {
-        gameController.setGameMode(GameController.GameMode.Endless);
+        gameController.setGameMode(GameMode.Endless);
         StartGame();
     }
 
     public void AdventureMode()
     {
-        gameController.setGameMode(GameController.GameMode.Adventure);
+        gameController.setGameMode(GameMode.Adventure);
         StartGame();
     }
 

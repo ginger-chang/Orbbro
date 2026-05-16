@@ -14,13 +14,13 @@ public class GameModeManager : MonoBehaviour
     public void setupGameMode()
     {
         
-        if (gameController.mode == GameController.GameMode.Classic)
+        if (gameController.mode == GameMode.Classic)
         {
             setupClassicMode();
-        } else if (gameController.mode == GameController.GameMode.Endless)
+        } else if (gameController.mode == GameMode.Endless)
         {
             setupEndlessMode();
-        } else if (gameController.mode == GameController.GameMode.Adventure)
+        } else if (gameController.mode == GameMode.Adventure)
         {
             setupAdventureMode();
         }

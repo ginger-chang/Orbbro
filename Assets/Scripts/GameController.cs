@@ -21,8 +21,6 @@ public class GameController : MonoBehaviour
     private float _savedTimeRemaining;
     private bool _levelAdvancedDuringResolve;
 
-    public enum GameMode { Classic, Endless, Adventure }
-
     //--------------------STARTING------------------------
 
     private void Awake()
