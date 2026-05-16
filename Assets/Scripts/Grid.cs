@@ -7,9 +7,8 @@ using DG.Tweening;
 
 public class Grid : MonoBehaviour
 {
-    public Orb orb; // will change!
+    public Orb orb;
 
-    private Image image;
     private GameController gameController;
     private RectTransform rect;
     public Vector2 posOfGridAbove;
@@ -20,11 +19,8 @@ public class Grid : MonoBehaviour
     {
         this.gameController = GameObject.FindGameObjectWithTag("game controller").GetComponent<GameController>();
 
-        // setting up orb
         assignOrb(GetComponentInChildren<Orb>());
 
-        // for helper functions
-        this.image = this.GetComponent<Image>();
         this.rect = this.GetComponent<RectTransform>();
 
         Vector2 scaledSize = Vector2.Scale(rect.rect.size, rect.lossyScale);
@@ -81,18 +77,4 @@ public class Grid : MonoBehaviour
         }      
     }
 
-    private bool disableHint = true;
-    
-    //HELPER FUNCTIONS, not used in real game
-    public void setMatch(int match)
-    {
-        if (disableHint) return;
-        if (match == 0)
-        {
-            image.color = new Color(1f, 1f, 1f, 0f);
-        } else
-        {
-            image.color = new Color(1f, 1f, 1f, 0.5f);
-        }
-    }
 }
