@@ -76,7 +76,11 @@ public class GameController : MonoBehaviour
 
     //----------------------HELPERS-------------------------
 
-    public void KillCoroutines() => StopAllCoroutines();
+    public void KillCoroutines()
+    {
+        StopAllCoroutines();
+        BoardManager.StopAllCoroutines();
+    }
 
     public void SetGameMode(GameMode mode) => this.mode = mode;
 

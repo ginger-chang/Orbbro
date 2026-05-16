@@ -20,6 +20,7 @@ public class UIManager : MonoBehaviour
     void Start()
     {
         pauseMenuGO.SetActive(false);
+        RefreshMainMenuButtons();
     }
 
     void Awake()
@@ -32,6 +33,25 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject timerBarGO;
     [SerializeField] private GameObject backgroundMaskGO;
     [SerializeField] private GameObject levelTextGO;
+
+    [Header("---Main Menu Buttons---")]
+    [SerializeField] private TextMeshProUGUI classicButtonText;
+    [SerializeField] private TextMeshProUGUI endlessButtonText;
+    [SerializeField] private TextMeshProUGUI adventureButtonText;
+
+    private void RefreshMainMenuButtons()
+    {
+        SetModeButtonText(classicButtonText,   "Classic",   GameMode.Classic);
+        SetModeButtonText(endlessButtonText,   "Endless",   GameMode.Endless);
+        SetModeButtonText(adventureButtonText, "Adventure", GameMode.Adventure);
+    }
+
+    private void SetModeButtonText(TextMeshProUGUI label, string modeName, GameMode mode)
+    {
+        if (label == null) return;
+        int hs = ScoreManager.GetHighScore(mode);
+        label.text = hs > 0 ? $"{modeName}\n<size=70%>Best: {hs}</size>" : modeName;
+    }
 
     public void SetTimer(bool active)
     {
@@ -270,5 +290,6 @@ public class UIManager : MonoBehaviour
         gameController.StateMachine.ChangeState(new MainMenuState());
         mainMenuGO.SetActive(true);
         pauseButton.SetActive(false);
+        RefreshMainMenuButtons();
     }
 }

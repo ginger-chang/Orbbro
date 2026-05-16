@@ -44,6 +44,9 @@ public class ScoreManager : MonoBehaviour
         if (diamondText != null) diamondText.text = $"Diamonds: {Diamonds}";
     }
 
+    public static int GetHighScore(GameMode mode) =>
+        PlayerPrefs.GetInt($"HighScore_{mode}", 0);
+
     public void CollectDiamonds(int count)
     {
         Diamonds += count;
