@@ -2,7 +2,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using System;
 using UnityEngine.EventSystems;
-using System.Collections.Generic;
 
 public class Orb : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandler
 {
@@ -119,11 +118,9 @@ public class Orb : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandl
 
     public bool validDrag = false;
 
-    [Obsolete]
     public void OnDrag(PointerEventData eventData)
     {
         if (!gameController.StateMachine.IsInState<PlayModeState>() || !validDrag) return;
-        // Set the dragging area to be within game area.
         float x = eventData.position.x;
         x = Math.Max(x, this.gameAreaMinX);
         x = Math.Min(x, this.gameAreaMaxX);
@@ -132,13 +129,9 @@ public class Orb : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandl
         y = Math.Min(y, this.gameAreaMaxY);
         rect.position = new Vector3(x, y, 0f);
 
-        // Detect swap
-        foreach(Grid grid in FindObjectsOfType<Grid>())
+        foreach (Grid grid in gameController.BoardManager.Board)
         {
-            if (grid == curGrid)
-            {
-                continue;
-            }
+            if (grid == curGrid) continue;
             RectTransform gridRect = grid.GetComponent<RectTransform>();
             if (RectTransformUtility.RectangleContainsScreenPoint(gridRect, rect.position, null))
             {
