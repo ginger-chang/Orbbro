@@ -12,6 +12,7 @@ public class PauseState : IGameState
 
     public void Exit(GameContext ctx)
     {
+        Time.timeScale = 1f;
         ctx.UIManager.HidePauseMenu();
     }
 }
