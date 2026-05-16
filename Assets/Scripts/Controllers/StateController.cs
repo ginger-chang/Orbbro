@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using UnityEngine;
 
 public class GameStateMachine
 {
@@ -7,13 +6,14 @@ public class GameStateMachine
     private readonly Stack<IGameState> _stack = new Stack<IGameState>();
     private readonly GameContext _ctx;
 
-    // Visible in the Unity Inspector via GameController's serialized field
-    public Enums.GameState CurrentStateName { get; private set; }
+    // Visible in the Unity Inspector via GameController's _inspectorState field
+    public string CurrentStateName { get; private set; }
 
     public GameStateMachine(GameContext ctx, IGameState initialState)
     {
         _ctx = ctx;
         Current = initialState;
+        CurrentStateName = Current.GetType().Name;
         Current.Enter(_ctx);
     }
 
@@ -22,7 +22,7 @@ public class GameStateMachine
     {
         Current.Exit(_ctx);
         Current = newState;
-        UpdateStateName();
+        CurrentStateName = Current.GetType().Name;
         Current.Enter(_ctx);
     }
 
@@ -32,7 +32,7 @@ public class GameStateMachine
         Current.Exit(_ctx);
         _stack.Push(Current);
         Current = newState;
-        UpdateStateName();
+        CurrentStateName = Current.GetType().Name;
         Current.Enter(_ctx);
     }
 
@@ -41,7 +41,7 @@ public class GameStateMachine
     {
         Current.Exit(_ctx);
         Current = _stack.Pop();
-        UpdateStateName();
+        CurrentStateName = Current.GetType().Name;
         Current.Enter(_ctx);
     }
 
@@ -52,18 +52,4 @@ public class GameStateMachine
     }
 
     public bool IsInState<T>() where T : IGameState => Current is T;
-
-    private void UpdateStateName()
-    {
-        CurrentStateName = Current switch
-        {
-            PlayModeState   => Enums.GameState.PlayMode,
-            ResolvingState  => Enums.GameState.Resolving,
-            PauseState      => Enums.GameState.Pause,
-            MainMenuState   => Enums.GameState.MainMenu,
-            ReviveState     => Enums.GameState.Revive,
-            GameOverState   => Enums.GameState.GameOver,
-            _               => CurrentStateName
-        };
-    }
 }

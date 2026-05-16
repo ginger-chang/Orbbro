@@ -23,7 +23,7 @@ public class GameController : MonoBehaviour
 
     // FSM — _inspectorState mirrors the current state for the Unity Inspector
     public GameStateMachine StateMachine { get; private set; }
-    [SerializeField] private Enums.GameState _inspectorState;
+    [SerializeField] private string _inspectorState;
 
     public GameMode mode = GameMode.Classic;
     public float dropTime = 0.24f;
