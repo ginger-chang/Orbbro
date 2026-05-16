@@ -7,20 +7,26 @@ public class GameModeManager : MonoBehaviour
 
     void Awake()
     {
-        this.gameController = GameController.Instance;
         this.uiManager = GameObject.FindGameObjectWithTag("UI Manager").GetComponent<UIManager>();
+    }
+
+    void Start()
+    {
+        this.gameController = GameController.Instance;
     }
 
     public void SetupGameMode()
     {
-        
+
         if (gameController.mode == GameMode.Classic)
         {
             SetupClassicMode();
-        } else if (gameController.mode == GameMode.Endless)
+        }
+        else if (gameController.mode == GameMode.Endless)
         {
             SetupEndlessMode();
-        } else if (gameController.mode == GameMode.Adventure)
+        }
+        else if (gameController.mode == GameMode.Adventure)
         {
             SetupAdventureMode();
         }
