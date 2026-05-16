@@ -14,6 +14,10 @@ public class ScoreManager : MonoBehaviour
     [SerializeField] public Slider timerBar;
     [SerializeField] private TextMeshProUGUI levelText;
 
+    [Header("---Diamonds---")]
+    [SerializeField] private TextMeshProUGUI diamondText;
+    public int Diamonds { get; private set; }
+
     [Header("---Multipliers---")]
     public float comboMultiplier = 1.3f;
     public float iterMultiplier  = 1.2f;
@@ -33,6 +37,20 @@ public class ScoreManager : MonoBehaviour
     private int _curLevelScoreGoal;
     private int _scoreGoal;
     private string _highScoreKey;
+
+    private void Awake()
+    {
+        Diamonds = PlayerPrefs.GetInt("Diamonds", 0);
+        if (diamondText != null) diamondText.text = $"Diamonds: {Diamonds}";
+    }
+
+    public void CollectDiamonds(int count)
+    {
+        Diamonds += count;
+        PlayerPrefs.SetInt("Diamonds", Diamonds);
+        PlayerPrefs.Save();
+        if (diamondText != null) diamondText.text = $"Diamonds: {Diamonds}";
+    }
 
     public void ResetForNewGame(GameMode mode)
     {

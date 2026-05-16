@@ -23,6 +23,15 @@ public class Orb : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandl
 
     public Image image;
 
+    [SerializeField] private GameObject diamondVisualGO;
+    public bool IsDiamond { get; private set; }
+
+    public void SetDiamond(bool value)
+    {
+        IsDiamond = value;
+        if (diamondVisualGO != null) diamondVisualGO.SetActive(value);
+    }
+
     //------------------------STARTING---------------------------
 
     void Awake()

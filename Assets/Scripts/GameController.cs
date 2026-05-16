@@ -22,6 +22,7 @@ public class GameController : MonoBehaviour
 
     private float _savedTimeRemaining;
     private bool _levelAdvancedDuringResolve;
+    private bool _spawnDiamondOnNextFill;
 
     //--------------------STARTING------------------------
 
@@ -86,6 +87,9 @@ public class GameController : MonoBehaviour
         _levelAdvancedDuringResolve = true;
         if (StateMachine.Current is PlayModeState ps)
             ps.ResetTimer(scoreManager.CurrentTimeLimit);
+        if (scoreManager.CurrentLevel % 5 == 0
+            && (mode == GameMode.Classic || mode == GameMode.Adventure))
+            _spawnDiamondOnNextFill = true;
     }
 
     //---------------------GAME OVER & REVIVAL-----------------------
@@ -165,11 +169,14 @@ public class GameController : MonoBehaviour
 
         for (int matchId = 1; matchId <= BoardManager.NumMatches; matchId++)
         {
-            int numOrb = BoardManager.DestroyMatchedOrbs(matchId);
+            var (numOrb, numDiamonds) = BoardManager.DestroyMatchedOrbs(matchId);
             audioManager.PlayDisappearSFX();
             scoreManager.AddMatchScore(numOrb);
+            if (numDiamonds > 0) scoreManager.CollectDiamonds(numDiamonds);
             yield return new WaitForSeconds(0.5f);
         }
-        yield return StartCoroutine(BoardManager.FillBoard());
+        bool spawnDiamond = _spawnDiamondOnNextFill;
+        _spawnDiamondOnNextFill = false;
+        yield return StartCoroutine(BoardManager.FillBoard(spawnDiamond));
     }
 }

@@ -55,28 +55,29 @@ public class BoardManager : MonoBehaviour
         return suits;
     }
 
-    // Destroys all orbs belonging to matchId, returns the count destroyed.
-    public int DestroyMatchedOrbs(int matchId)
+    // Destroys all orbs belonging to matchId, returns (orbCount, diamondCount).
+    public (int orbCount, int diamondCount) DestroyMatchedOrbs(int matchId)
     {
-        int count = 0;
+        int count = 0, diamonds = 0;
         for (int i = 0; i < _gridSize; i++)
         {
             for (int j = 0; j < _gridSize; j++)
             {
                 if (Matches[i, j] == matchId)
                 {
+                    if (Board[i, j].orb.IsDiamond) diamonds++;
                     Destroy(Board[i, j].orb.gameObject);
                     count++;
                 }
             }
         }
-        return count;
+        return (count, diamonds);
     }
 
-    public IEnumerator FillBoard()
+    public IEnumerator FillBoard(bool spawnDiamond = false)
     {
         DropExistingOrbs();
-        yield return StartCoroutine(DropNewOrbs());
+        yield return StartCoroutine(DropNewOrbs(spawnDiamond));
         yield return new WaitForSeconds(0.2f);
     }
 
@@ -95,7 +96,7 @@ public class BoardManager : MonoBehaviour
         }
     }
 
-    private IEnumerator DropNewOrbs()
+    private IEnumerator DropNewOrbs(bool spawnDiamond = false)
     {
         int[] countNeeded = new int[_gridSize];
         int maxCount = 0;
@@ -108,6 +109,13 @@ public class BoardManager : MonoBehaviour
             maxCount = Math.Max(maxCount, count);
         }
 
+        int totalNew = 0;
+        for (int i = 0; i < _gridSize; i++) totalNew += countNeeded[i];
+        int diamondIndex = spawnDiamond && totalNew > 0
+            ? UnityEngine.Random.Range(0, totalNew)
+            : -1;
+
+        int spawnCount = 0;
         for (int iter = 0; iter < maxCount; iter++)
         {
             for (int i = 0; i < _gridSize; i++)
@@ -117,6 +125,8 @@ public class BoardManager : MonoBehaviour
                     GameObject orbGO = Instantiate(orbPrefab);
                     Orb orb = orbGO.GetComponent<Orb>();
                     orb.SetRects(gameAreaRect, dragLayerRect);
+                    if (spawnCount == diamondIndex) orb.SetDiamond(true);
+                    spawnCount++;
                     Board[i, countNeeded[i] - 1].AssignOrb(orb, "", countNeeded[i], true);
                     countNeeded[i]--;
                 }
