@@ -78,10 +78,12 @@ public class ScoreManager : MonoBehaviour
         if (diamondText != null) diamondText.text = $"Diamonds: {Diamonds}";
     }
 
-    private string _highLevelKey;
+    private string   _highLevelKey;
+    private GameMode _mode;
 
     public void ResetForNewGame(GameMode mode, SkillManager skillManager = null)
     {
+        _mode           = mode;
         _skillManager   = skillManager;
         _highScoreKey   = $"HighScore_{mode}";
         _highLevelKey   = $"HighLevel_{mode}";
@@ -113,7 +115,7 @@ public class ScoreManager : MonoBehaviour
     public void SetupLevel(int level)
     {
         CurrentLevel = level;
-        LevelParams lp = new LevelParams(level);
+        LevelParams lp = new LevelParams(level, _mode);
         _curLevelScoreGoal = lp.scoreGoal;
         _scoreGoal        += lp.scoreGoal;
         CurrentTimeLimit   = lp.timeLimit;

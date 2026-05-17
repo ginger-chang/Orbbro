@@ -35,14 +35,19 @@ public class LevelParams
     private static readonly float L50RegularGoal =
         L19Anchor * Mathf.Pow(EarlyRate, 50 - 19);
 
-    public LevelParams(int level)
+    // Classic has no skills so its score potential is much lower; scale goals down accordingly.
+    private const float ClassicScaleFactor = 0.55f;
+
+    public LevelParams(int level, GameMode mode = GameMode.Adventure)
     {
         levelNumber = level;
 
         if (level <= _timeLimits.Length)
         {
             timeLimit = _timeLimits[level - 1];
-            scoreGoal = _scoreGoals[level - 1];
+            scoreGoal = mode == GameMode.Classic
+                ? Mathf.RoundToInt(_scoreGoals[level - 1] * ClassicScaleFactor)
+                : _scoreGoals[level - 1];
             return;
         }
 
@@ -62,9 +67,10 @@ public class LevelParams
             baseTime    = 40f;
         }
 
+        float goal = isBoss ? regularGoal * BossMulti : regularGoal;
+        if (mode == GameMode.Classic) goal *= ClassicScaleFactor;
+
         timeLimit = isBoss ? baseTime + BossTimeBonus : baseTime;
-        scoreGoal = isBoss
-            ? Mathf.RoundToInt(regularGoal * BossMulti)
-            : Mathf.RoundToInt(regularGoal);
+        scoreGoal = Mathf.RoundToInt(goal);
     }
 }
