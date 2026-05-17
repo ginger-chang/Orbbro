@@ -19,9 +19,9 @@ public class Grid : MonoBehaviour
     {
         this.gameController = GameController.Instance;
 
-        AssignOrb(GetComponentInChildren<Orb>());
-
         this.rect = this.GetComponent<RectTransform>();
+
+        AssignOrb(GetComponentInChildren<Orb>());
 
         Vector2 scaledSize = Vector2.Scale(rect.rect.size, rect.lossyScale);
         this.posOfGridAbove = new Vector2(0, scaledSize.y - 45);
@@ -56,12 +56,14 @@ public class Grid : MonoBehaviour
             else
             {
                 float dropTime = gameController.BoardManager.dropTime;
+                Vector2 scaledSize = Vector2.Scale(rect.rect.size, rect.lossyScale);
+                // Explicitly set starting position for both new and existing orbs so they
+                // use the same reference frame, avoiding drift from reparenting offsets.
+                orbRect.anchoredPosition = new Vector2(0, (scaledSize.y * dropGridCount) - 45);
                 if (newOrb)
                 {
                     orb.transform.localScale = Vector3.one;
                     orb.SetToTransparent();
-                    Vector2 scaledSize = Vector2.Scale(rect.rect.size, rect.lossyScale);
-                    orbRect.anchoredPosition = new Vector2(0, (scaledSize.y * dropGridCount) - 45);
                     orb.image.DOFade(1f, dropTime);
                 }
 

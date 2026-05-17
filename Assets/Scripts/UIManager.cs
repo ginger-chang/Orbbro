@@ -131,6 +131,15 @@ public class UIManager : MonoBehaviour
     public void ShowPauseMenu()
     {
         pauseMenuGO.SetActive(true);
+        // Ensure pause menu sorts above dynamically-added orb fall canvases (sortingOrder 10/11).
+        var canvas = pauseMenuGO.GetComponent<Canvas>();
+        if (canvas == null)
+        {
+            canvas = pauseMenuGO.AddComponent<Canvas>();
+            pauseMenuGO.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+        }
+        canvas.overrideSorting = true;
+        canvas.sortingOrder = 100;
     }
 
     public void HidePauseMenu()
