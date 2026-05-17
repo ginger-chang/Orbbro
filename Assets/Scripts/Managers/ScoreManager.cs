@@ -163,21 +163,7 @@ public class ScoreManager : MonoBehaviour
 
     public void HideComboText() => comboText.gameObject.SetActive(false);
 
-    public void ApplyNoMatchPenalty()
-    {
-        int penalty       = Mathf.FloorToInt(_curLevelScoreGoal * 0.2f);
-        int levelProgress = _score - (_scoreGoal - _curLevelScoreGoal);
-
-        if (levelProgress <= penalty)
-            _score = _scoreGoal - _curLevelScoreGoal;
-        else
-            _score -= penalty;
-
-        scoreText.text = $"Score: {_score}";
-        AnimateScoreBar();
-    }
-
-    public void StartTimerWarning()
+public void StartTimerWarning()
     {
         if (_warningTween != null && _warningTween.IsActive()) return;
         var fill = timerBar.fillRect.GetComponent<Image>();
@@ -197,11 +183,16 @@ public class ScoreManager : MonoBehaviour
     {
         var padding = scoreBarMask.padding;
 
-        if (_score >= _scoreGoal)
+        bool advanced = false;
+        while (_score >= _scoreGoal)
         {
             AdvanceLevel();
+            advanced = true;
+        }
 
-            float offset = ScoreBarOffset();
+        float offset = ScoreBarOffset();
+        if (advanced)
+        {
             var seq = DOTween.Sequence();
             seq.Append(DOTween.To(() => padding.w, x => { padding.w = x; scoreBarMask.padding = padding; }, 0f, 0.25f));
             seq.AppendCallback(() => { padding.w = 1000f; scoreBarMask.padding = padding; });
@@ -209,7 +200,6 @@ public class ScoreManager : MonoBehaviour
         }
         else
         {
-            float offset = ScoreBarOffset();
             DOTween.To(() => padding.w, x => { padding.w = x; scoreBarMask.padding = padding; }, offset, 0.5f);
         }
     }

@@ -39,6 +39,20 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI endlessButtonText;
     [SerializeField] private TextMeshProUGUI adventureButtonText;
 
+    //----------------------HEARTS----------------------------
+
+    [Header("---Hearts---")]
+    [SerializeField] private GameObject heart1GO;
+    [SerializeField] private GameObject heart2GO;
+    [SerializeField] private GameObject heart3GO;
+
+    public void UpdateHearts(int remaining)
+    {
+        heart1GO.SetActive(remaining >= 1);
+        heart2GO.SetActive(remaining >= 2);
+        heart3GO.SetActive(remaining >= 3);
+    }
+
     //--------------------SKILL SELECT------------------------
 
     [Header("---Skill Select---")]
@@ -46,15 +60,18 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI skill1Text;
     [SerializeField] private TextMeshProUGUI skill2Text;
     [SerializeField] private TextMeshProUGUI skill3Text;
+    [SerializeField] private TextMeshProUGUI skillPicksRemainingText; // optional — shows "2 picks left"
 
     private SkillOffer[] _currentSkillOptions;
 
-    public void ShowSkillSelect(SkillOffer[] skills)
+    public void ShowSkillSelect(SkillOffer[] skills, int picksRemaining = 1)
     {
         _currentSkillOptions = skills;
         SetSkillText(skill1Text, skills[0]);
         SetSkillText(skill2Text, skills[1]);
         SetSkillText(skill3Text, skills[2]);
+        if (skillPicksRemainingText != null)
+            skillPicksRemainingText.text = picksRemaining > 1 ? $"{picksRemaining} picks left" : "";
         skillSelectGO.SetActive(true);
     }
 
@@ -300,6 +317,7 @@ public class UIManager : MonoBehaviour
         pauseButton.SetActive(true);
         gameOverGO.SetActive(false);
         revivePopupGO.SetActive(false);
+        UpdateHearts(0);
         ResetToDefaultPauseMenu();
     }
 
@@ -319,6 +337,7 @@ public class UIManager : MonoBehaviour
         gameController.StateMachine.ChangeState(new MainMenuState());
         mainMenuGO.SetActive(true);
         pauseButton.SetActive(false);
+        UpdateHearts(0);
         RefreshMainMenuButtons();
     }
 }

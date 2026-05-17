@@ -24,7 +24,7 @@ public class GameController : MonoBehaviour
     private float _savedTimeRemaining;
     private bool _levelAdvancedDuringResolve;
     private bool _spawnDiamondOnNextFill;
-    private bool _pendingSkillSelect;
+    private int _pendingSkillSelects;
 
     //--------------------STARTING------------------------
 
@@ -63,10 +63,11 @@ public class GameController : MonoBehaviour
         BoardManager.Initialize();
 
         SkillManager.Reset();
-        _pendingSkillSelect = false;
+        _pendingSkillSelects = 0;
         gameModeManager.SetupGameMode();
         scoreManager.ResetForNewGame(mode, SkillManager);
-        revivedCount = 0;
+        _heartsUsed = 0;
+        _reviveUsed = false;
     }
 
     public void EnterPlayMode()
@@ -93,7 +94,11 @@ public class GameController : MonoBehaviour
     public void SelectSkill(SkillOffer offer)
     {
         if (StateMachine.Current is SkillSelectState sss)
+        {
             sss.SelectSkill(StateMachine.Ctx, offer);
+            if (offer.Type == SkillType.ExtraLife)
+                uiManager.UpdateHearts(SkillManager.ExtraLives - _heartsUsed);
+        }
     }
 
     //---------------------LEVEL GOAL-----------------------
@@ -110,13 +115,14 @@ public class GameController : MonoBehaviour
             && (mode == GameMode.Classic || mode == GameMode.Adventure))
             _spawnDiamondOnNextFill = true;
         if (mode == GameMode.Adventure && scoreManager.CurrentLevel % 3 == 0)
-            _pendingSkillSelect = true;
+            _pendingSkillSelects++;
     }
 
     //---------------------GAME OVER & REVIVAL-----------------------
 
     private Orb orbInSwap;
-    private int revivedCount;
+    private int  _heartsUsed;
+    private bool _reviveUsed;
 
     public void SetOrbInSwap(Orb orb) => orbInSwap = orb;
 
@@ -130,9 +136,15 @@ public class GameController : MonoBehaviour
             orbInSwap = null;
             Resolve();
         }
-        else if (revivedCount == 0 || SkillManager.ExtraLives >= revivedCount)
+        else if (_heartsUsed < SkillManager.ExtraLives)
         {
-            revivedCount++;
+            _heartsUsed++;
+            uiManager.UpdateHearts(SkillManager.ExtraLives - _heartsUsed);
+            StateMachine.ChangeState(new PlayModeState(scoreManager.CurrentTimeLimit, scoreManager.CurrentTimeLimit));
+        }
+        else if (!_reviveUsed)
+        {
+            _reviveUsed = true;
             StateMachine.ChangeState(new ReviveState());
         }
         else
@@ -172,18 +184,19 @@ public class GameController : MonoBehaviour
         }
         scoreManager.HideComboText();
 
-        if (!anyMatch && (mode == GameMode.Classic || mode == GameMode.Adventure))
-            scoreManager.ApplyNoMatchPenalty();
-
         float resumeTime = _levelAdvancedDuringResolve
             ? scoreManager.CurrentTimeLimit
             : _savedTimeRemaining;
         _levelAdvancedDuringResolve = false;
 
-        if (_pendingSkillSelect)
+        if (!anyMatch && (mode == GameMode.Classic || mode == GameMode.Adventure))
+            resumeTime = Mathf.Max(0f, resumeTime - 2f);
+
+        if (_pendingSkillSelects > 0)
         {
-            _pendingSkillSelect = false;
-            StateMachine.ChangeState(new SkillSelectState(scoreManager.CurrentTimeLimit));
+            int picks = _pendingSkillSelects;
+            _pendingSkillSelects = 0;
+            StateMachine.ChangeState(new SkillSelectState(scoreManager.CurrentTimeLimit, picks));
         }
         else
         {

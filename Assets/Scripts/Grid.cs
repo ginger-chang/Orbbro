@@ -64,6 +64,13 @@ public class Grid : MonoBehaviour
                     orbRect.anchoredPosition = new Vector2(0, (scaledSize.y * dropGridCount) - 45);
                     orb.image.DOFade(1f, dropTime);
                 }
+
+                // Render above all static board elements while falling so dropping orbs
+                // never get buried behind orbs that are children of lower (later-sibling) grid cells.
+                var sortCanvas = orb.gameObject.AddComponent<Canvas>();
+                sortCanvas.overrideSorting = true;
+                sortCanvas.sortingOrder = 10;
+
                 Sequence seq = DOTween.Sequence();
                 if (dropGridCount > 1)
                 {
@@ -71,6 +78,7 @@ public class Grid : MonoBehaviour
                     seq.Append(orbRect.DOAnchorPos(posOfGridAbove, dropTimeLinear).SetEase(Ease.Linear));
                 }
                 seq.Append(orbRect.DOAnchorPos(targetPos, dropTime).SetEase(dropAnimationCurve));
+                seq.OnComplete(() => Destroy(sortCanvas));
                 seq.Play();
             }
             

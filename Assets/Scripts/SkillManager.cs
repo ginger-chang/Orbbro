@@ -47,7 +47,7 @@ public class SkillManager
                 OrbColorWeights[offer.ColorIndex] += 1;
                 break;
             case SkillType.ExtraLife:
-                ExtraLives++;
+                if (ExtraLives < 3) ExtraLives++;
                 break;
             case SkillType.MatchFiveBonus:
                 MatchFiveBonusMultiplier += 0.5f;
@@ -90,6 +90,7 @@ public class SkillManager
                 }
                 else
                 {
+                    if (type == SkillType.ExtraLife && ExtraLives >= 3) continue;
                     if (usedTypes.Contains(type)) continue;
                     usedTypes.Add(type);
                 }
