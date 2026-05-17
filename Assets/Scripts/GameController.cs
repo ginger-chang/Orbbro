@@ -18,7 +18,7 @@ public class GameController : MonoBehaviour
     private UIManager uiManager;
     private GameModeManager gameModeManager;
     public BoardManager BoardManager { get; private set; }
-    private ScoreManager scoreManager;
+    public ScoreManager ScoreManager { get; private set; }
     public SkillManager SkillManager { get; private set; }
 
     private float _savedTimeRemaining;
@@ -35,7 +35,7 @@ public class GameController : MonoBehaviour
         uiManager       = GameObject.FindGameObjectWithTag("UI Manager").GetComponent<UIManager>();
         gameModeManager = GameObject.FindGameObjectWithTag("Game Mode Manager").GetComponent<GameModeManager>();
         BoardManager    = GetComponent<BoardManager>();
-        scoreManager    = GetComponent<ScoreManager>();
+        ScoreManager    = GetComponent<ScoreManager>();
         SkillManager    = new SkillManager();
 
         var ctx = new GameContext
@@ -45,13 +45,13 @@ public class GameController : MonoBehaviour
             AudioManager    = audioManager,
             GameModeManager = gameModeManager,
             BoardManager    = BoardManager,
-            ScoreManager    = scoreManager,
+            ScoreManager    = ScoreManager,
             SkillManager    = SkillManager
         };
         StateMachine    = new GameStateMachine(ctx, new MainMenuState());
         ctx.StateMachine = StateMachine;
 
-        scoreManager.OnLevelGoalReached += OnLevelGoalReached;
+        ScoreManager.OnLevelGoalReached += OnLevelGoalReached;
     }
 
     // Called by Unity on first frame, and again by UIManager when starting/restarting.
@@ -65,14 +65,14 @@ public class GameController : MonoBehaviour
         SkillManager.Reset();
         _pendingSkillSelects = 0;
         gameModeManager.SetupGameMode();
-        scoreManager.ResetForNewGame(mode, SkillManager);
+        ScoreManager.ResetForNewGame(mode, SkillManager);
         _heartsUsed = 0;
         _reviveUsed = false;
     }
 
     public void EnterPlayMode()
     {
-        StateMachine.ChangeState(new PlayModeState(scoreManager.CurrentTimeLimit, scoreManager.CurrentTimeLimit));
+        StateMachine.ChangeState(new PlayModeState(ScoreManager.CurrentTimeLimit, ScoreManager.CurrentTimeLimit));
     }
 
     void Update()
@@ -108,13 +108,13 @@ public class GameController : MonoBehaviour
         _levelAdvancedDuringResolve = true;
         if (StateMachine.Current is PlayModeState ps)
         {
-            scoreManager.StopTimerWarning();
-            ps.ResetTimer(scoreManager.CurrentTimeLimit);
+            ScoreManager.StopTimerWarning();
+            ps.ResetTimer(ScoreManager.CurrentTimeLimit);
         }
-        if (scoreManager.CurrentLevel % 5 == 0
+        if (ScoreManager.CurrentLevel % 5 == 0
             && (mode == GameMode.Classic || mode == GameMode.Adventure))
             _spawnDiamondOnNextFill = true;
-        if (mode == GameMode.Adventure && scoreManager.CurrentLevel % 3 == 0)
+        if (mode == GameMode.Adventure && ScoreManager.CurrentLevel % 3 == 0)
             _pendingSkillSelects++;
     }
 
@@ -140,7 +140,7 @@ public class GameController : MonoBehaviour
         {
             _heartsUsed++;
             uiManager.UpdateHearts(SkillManager.ExtraLives - _heartsUsed);
-            StateMachine.ChangeState(new PlayModeState(scoreManager.CurrentTimeLimit, scoreManager.CurrentTimeLimit));
+            StateMachine.ChangeState(new PlayModeState(ScoreManager.CurrentTimeLimit, ScoreManager.CurrentTimeLimit));
         }
         else if (!_reviveUsed)
         {
@@ -156,7 +156,7 @@ public class GameController : MonoBehaviour
     public void Revive()
     {
         Debug.Log("revive!");
-        StateMachine.ChangeState(new PlayModeState(scoreManager.CurrentTimeLimit, scoreManager.CurrentTimeLimit));
+        StateMachine.ChangeState(new PlayModeState(ScoreManager.CurrentTimeLimit, ScoreManager.CurrentTimeLimit));
     }
 
     //--------------------RESOLVING-------------------------
@@ -166,7 +166,7 @@ public class GameController : MonoBehaviour
         if (StateMachine.Current is PlayModeState ps)
             _savedTimeRemaining = ps.TimeRemaining;
 
-        scoreManager.BeginResolve();
+        ScoreManager.BeginResolve();
         _levelAdvancedDuringResolve = false;
         StateMachine.ChangeState(new ResolvingState());
     }
@@ -182,12 +182,12 @@ public class GameController : MonoBehaviour
             anyMatch = true;
             yield return StartCoroutine(DisappearAllMatches());
         }
-        scoreManager.HideComboText();
+        ScoreManager.HideComboText();
 
-        float timeBonus  = scoreManager.EndResolve();
+        float timeBonus  = ScoreManager.EndResolve();
         float resumeTime = _levelAdvancedDuringResolve
-            ? scoreManager.CurrentTimeLimit
-            : Mathf.Min(_savedTimeRemaining + timeBonus, scoreManager.CurrentTimeLimit);
+            ? ScoreManager.CurrentTimeLimit
+            : Mathf.Min(_savedTimeRemaining + timeBonus, ScoreManager.CurrentTimeLimit);
         _levelAdvancedDuringResolve = false;
 
         if (!anyMatch && (mode == GameMode.Classic || mode == GameMode.Adventure))
@@ -197,25 +197,25 @@ public class GameController : MonoBehaviour
         {
             int picks = _pendingSkillSelects;
             _pendingSkillSelects = 0;
-            StateMachine.ChangeState(new SkillSelectState(scoreManager.CurrentTimeLimit, picks));
+            StateMachine.ChangeState(new SkillSelectState(ScoreManager.CurrentTimeLimit, picks));
         }
         else
         {
-            StateMachine.ChangeState(new PlayModeState(scoreManager.CurrentTimeLimit, resumeTime));
+            StateMachine.ChangeState(new PlayModeState(ScoreManager.CurrentTimeLimit, resumeTime));
         }
     }
 
     private IEnumerator DisappearAllMatches()
     {
-        scoreManager.BeginIteration();
+        ScoreManager.BeginIteration();
         BoardManager.UpdateMatches();
 
         for (int matchId = 1; matchId <= BoardManager.NumMatches; matchId++)
         {
             var (numOrb, numDiamonds, suit) = BoardManager.DestroyMatchedOrbs(matchId);
             audioManager.PlayDisappearSFX();
-            scoreManager.AddMatchScore(numOrb, suit);
-            if (numDiamonds > 0) scoreManager.CollectDiamonds(numDiamonds);
+            ScoreManager.AddMatchScore(numOrb, suit);
+            if (numDiamonds > 0) ScoreManager.CollectDiamonds(numDiamonds);
             yield return new WaitForSeconds(0.5f);
         }
         bool spawnDiamond = _spawnDiamondOnNextFill;

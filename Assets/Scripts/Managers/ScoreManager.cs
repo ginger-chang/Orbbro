@@ -42,6 +42,7 @@ public class ScoreManager : MonoBehaviour
     private Color _timerBarNormalColor;
 
     private SkillManager _skillManager;
+    private CanvasGroup  _comboCanvasGroup;
 
     private void Awake()
     {
@@ -49,12 +50,17 @@ public class ScoreManager : MonoBehaviour
         if (diamondText != null) diamondText.text = $"Diamonds: {Diamonds}";
 
         // Keep combo text above dynamically-sorted orb fall canvases (sortingOrder 10/11).
+        // Use a CanvasGroup for show/hide so the Canvas stays active (avoids one-frame
+        // sorting glitch that occurs when SetActive re-enables an overrideSorting Canvas).
         if (comboText != null)
         {
+            comboText.gameObject.SetActive(true);
             var c = comboText.gameObject.AddComponent<Canvas>();
             c.overrideSorting = true;
-            c.sortingOrder = 20;
+            c.sortingOrder = 200;
             comboText.gameObject.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+            _comboCanvasGroup = comboText.gameObject.AddComponent<CanvasGroup>();
+            _comboCanvasGroup.alpha = 0f;
         }
     }
 
@@ -92,7 +98,7 @@ public class ScoreManager : MonoBehaviour
         _highScore = PlayerPrefs.GetInt(_highScoreKey, 0);
         highScoreText.text = $"High score: {_highScore}";
         scoreText.text     = $"Score: {_score}";
-        comboText.gameObject.SetActive(false);
+        if (_comboCanvasGroup != null) _comboCanvasGroup.alpha = 0f;
 
         _curLevelScoreGoal = 0;
         _scoreGoal         = 0;
@@ -188,8 +194,8 @@ public class ScoreManager : MonoBehaviour
         _curScore  = newCurScore;
 
         scoreText.text = $"Score: {_score}";
-        comboText.gameObject.SetActive(true);
         comboText.text = $"Combo x{_curCombo}";
+        if (_comboCanvasGroup != null) _comboCanvasGroup.alpha = 1f;
 
         if (_score > _highScore)
         {
@@ -212,7 +218,8 @@ public class ScoreManager : MonoBehaviour
             CollectDiamonds(2);
     }
 
-    public void HideComboText() => comboText.gameObject.SetActive(false);
+    public void HideComboText() { if (_comboCanvasGroup != null) _comboCanvasGroup.alpha = 0f; }
+
 
 public void StartTimerWarning()
     {

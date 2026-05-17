@@ -162,7 +162,7 @@ public class UIManager : MonoBehaviour
             pauseMenuGO.AddComponent<UnityEngine.UI.GraphicRaycaster>();
         }
         canvas.overrideSorting = true;
-        canvas.sortingOrder = 100;
+        canvas.sortingOrder = 300;
     }
 
     public void HidePauseMenu()
