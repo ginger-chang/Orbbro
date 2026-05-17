@@ -92,13 +92,13 @@ public class SkillManager
         // Uncommon
         foreach (var t in new[] { SkillType.ComboMultiplier, SkillType.BaseMultiplier,
                                    SkillType.MatchFiveBonus, SkillType.StartingCombo,
-                                   SkillType.TimeSwell, SkillType.FirstStrike })
+                                   SkillType.TimeSwell, SkillType.FirstStrike,
+                                   SkillType.DiamondSurge })
             pool.Add((t, -1, SkillRarity.Uncommon));
         // Common (color-indexed ×6, then singletons)
         foreach (var t in new[] { SkillType.OrbColorBias, SkillType.ColorClearBonus, SkillType.ColorRush })
             for (int c = 0; c < 6; c++)
                 pool.Add((t, c, SkillRarity.Common));
-        pool.Add((SkillType.DiamondSurge, -1, SkillRarity.Common));
         return pool.ToArray();
     }
 
@@ -109,11 +109,11 @@ public class SkillManager
 
         for (int i = 0; i < count; i++)
         {
-            // Weighted rarity roll: Rare 5%, Uncommon 35%, Common 60%
+            // Weighted rarity roll: Rare 5%, Uncommon 45%, Common 50%
             SkillRarity targetRarity;
             int roll = UnityEngine.Random.Range(0, 100);
             if      (roll < 5)            targetRarity = SkillRarity.Rare;
-            else if (roll < 40)           targetRarity = SkillRarity.Uncommon;
+            else if (roll < 50)           targetRarity = SkillRarity.Uncommon;
             else                          targetRarity = SkillRarity.Common;
 
             SkillOffer offer = TryPickFromRarity(targetRarity, used)
