@@ -15,7 +15,7 @@ public class SkillSelectState : IGameState
     {
         Time.timeScale = 0f;
         var skills = ctx.SkillManager.GetRandomSkills(3);
-        ctx.UIManager.ShowSkillSelect(skills, _remainingPicks);
+        ctx.UIManager.ShowSkillSelect(skills);
     }
 
     public void Tick(GameContext ctx) { }

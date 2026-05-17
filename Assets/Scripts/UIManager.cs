@@ -60,18 +60,21 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI skill1Text;
     [SerializeField] private TextMeshProUGUI skill2Text;
     [SerializeField] private TextMeshProUGUI skill3Text;
-    [SerializeField] private TextMeshProUGUI skillPicksRemainingText; // optional — shows "2 picks left"
+    [SerializeField] private UnityEngine.UI.Image skill1BG;
+    [SerializeField] private UnityEngine.UI.Image skill2BG;
+    [SerializeField] private UnityEngine.UI.Image skill3BG;
 
     private SkillOffer[] _currentSkillOptions;
 
-    public void ShowSkillSelect(SkillOffer[] skills, int picksRemaining = 1)
+    public void ShowSkillSelect(SkillOffer[] skills)
     {
         _currentSkillOptions = skills;
         SetSkillText(skill1Text, skills[0]);
         SetSkillText(skill2Text, skills[1]);
         SetSkillText(skill3Text, skills[2]);
-        if (skillPicksRemainingText != null)
-            skillPicksRemainingText.text = picksRemaining > 1 ? $"{picksRemaining} picks left" : "";
+        SetSkillBG(skill1BG, skills[0]);
+        SetSkillBG(skill2BG, skills[1]);
+        SetSkillBG(skill3BG, skills[2]);
         skillSelectGO.SetActive(true);
         pauseButton.SetActive(false);
     }
@@ -88,6 +91,21 @@ public class UIManager : MonoBehaviour
     private void SetSkillText(TextMeshProUGUI label, SkillOffer offer)
     {
         label.text = $"<b>{SkillManager.GetDisplayName(offer)}</b>\n<size=70%>{SkillManager.GetDescription(offer)}</size>";
+    }
+
+    private static readonly Color _rarityColorRare     = new Color(1.00f, 0.84f, 0.00f, 1f); // gold
+    private static readonly Color _rarityColorUncommon = new Color(0.60f, 0.35f, 0.90f, 1f); // purple
+    private static readonly Color _rarityColorCommon   = new Color(0.30f, 0.55f, 0.90f, 1f); // blue
+
+    private void SetSkillBG(UnityEngine.UI.Image bg, SkillOffer offer)
+    {
+        if (bg == null) return;
+        bg.color = offer.Rarity switch
+        {
+            SkillManager.SkillRarity.Rare     => _rarityColorRare,
+            SkillManager.SkillRarity.Uncommon => _rarityColorUncommon,
+            _                                 => _rarityColorCommon,
+        };
     }
 
     private void RefreshMainMenuButtons()

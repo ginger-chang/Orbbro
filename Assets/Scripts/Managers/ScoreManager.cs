@@ -85,6 +85,10 @@ public class ScoreManager : MonoBehaviour
         SetupLevel(1);
     }
 
+    private bool   _firstResolveOfLevel;
+    private bool[] _colorRushedThisResolve = new bool[6];
+    private float  _pendingTimeBonus;
+
     public void SetupLevel(int level)
     {
         CurrentLevel = level;
@@ -95,6 +99,8 @@ public class ScoreManager : MonoBehaviour
 
         timerBar.value   = 1f;
         levelText.text   = $"Level {level}";
+
+        _firstResolveOfLevel = true;
 
         if (level == 1)
         {
@@ -110,6 +116,21 @@ public class ScoreManager : MonoBehaviour
         _curScore = 0;
         _curCombo = _skillManager?.StartingCombo ?? 0;
         _curIter  = 0;
+        _pendingTimeBonus        = 0f;
+        _colorRushedThisResolve  = new bool[6];
+    }
+
+    // Called by GameController after a resolve completes. Returns total time bonus to add.
+    public float EndResolve()
+    {
+        float bonus = _pendingTimeBonus;
+
+        if (_skillManager != null && _skillManager.TimeSwellStacks > 0)
+            bonus += Mathf.FloorToInt(_curCombo / 5) * 0.5f * _skillManager.TimeSwellStacks;
+
+        _firstResolveOfLevel = false;
+        _pendingTimeBonus    = 0f;
+        return bonus;
     }
 
     // Called once per disappear iteration within a resolve pass
@@ -130,12 +151,25 @@ public class ScoreManager : MonoBehaviour
                 s *= 1f + _skillManager.MatchFiveBonusMultiplier;
 
             int suitIndex = (int)suit - 1;
-            if (suitIndex >= 0 && suitIndex < 6 && _skillManager.ColorClearMultipliers[suitIndex] > 0f)
-                s *= 1f + _skillManager.ColorClearMultipliers[suitIndex];
+            if (suitIndex >= 0 && suitIndex < 6)
+            {
+                if (_skillManager.ColorClearMultipliers[suitIndex] > 0f)
+                    s *= 1f + _skillManager.ColorClearMultipliers[suitIndex];
+
+                if (_skillManager.ColorRushBonuses[suitIndex] > 0f && !_colorRushedThisResolve[suitIndex])
+                {
+                    _colorRushedThisResolve[suitIndex] = true;
+                    _pendingTimeBonus += _skillManager.ColorRushBonuses[suitIndex];
+                }
+            }
         }
 
         int newCurScore = Mathf.FloorToInt(s);
-        _score    += newCurScore - _curScore;
+        int delta = newCurScore - _curScore;
+        // Apply FirstStrike to the delta only — keeps _curScore clean for compounding.
+        if (_firstResolveOfLevel && _skillManager != null && _skillManager.FirstStrikeBonus > 0f)
+            delta = Mathf.FloorToInt(delta * (1f + _skillManager.FirstStrikeBonus));
+        _score    += delta;
         _curScore  = newCurScore;
 
         scoreText.text = $"Score: {_score}";
@@ -159,6 +193,8 @@ public class ScoreManager : MonoBehaviour
             baseMultiplier = 100 + _skillManager.BaseMultiplierBonus;
         else if (offer.Type == SkillType.ComboMultiplier)
             comboMultiplier = 1.3f + _skillManager.ComboMultiplierBonus;
+        else if (offer.Type == SkillType.DiamondSurge)
+            CollectDiamonds(2);
     }
 
     public void HideComboText() => comboText.gameObject.SetActive(false);

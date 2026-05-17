@@ -6,5 +6,9 @@ public enum SkillType
     ExtraLife,
     MatchFiveBonus,
     ColorClearBonus,
-    StartingCombo
+    StartingCombo,
+    TimeSwell,
+    FirstStrike,
+    DiamondSurge,
+    ColorRush,
 }

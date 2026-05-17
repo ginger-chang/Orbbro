@@ -184,9 +184,10 @@ public class GameController : MonoBehaviour
         }
         scoreManager.HideComboText();
 
+        float timeBonus  = scoreManager.EndResolve();
         float resumeTime = _levelAdvancedDuringResolve
             ? scoreManager.CurrentTimeLimit
-            : _savedTimeRemaining;
+            : Mathf.Min(_savedTimeRemaining + timeBonus, scoreManager.CurrentTimeLimit);
         _levelAdvancedDuringResolve = false;
 
         if (!anyMatch && (mode == GameMode.Classic || mode == GameMode.Adventure))
