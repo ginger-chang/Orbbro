@@ -73,9 +73,14 @@ public class UIManager : MonoBehaviour
         if (skillPicksRemainingText != null)
             skillPicksRemainingText.text = picksRemaining > 1 ? $"{picksRemaining} picks left" : "";
         skillSelectGO.SetActive(true);
+        pauseButton.SetActive(false);
     }
 
-    public void HideSkillSelect() => skillSelectGO.SetActive(false);
+    public void HideSkillSelect()
+    {
+        skillSelectGO.SetActive(false);
+        pauseButton.SetActive(true);
+    }
 
     // Called by each skill button via Inspector (pass 0, 1, or 2)
     public void OnSkillSelected(int index) => gameController.SelectSkill(_currentSkillOptions[index]);
