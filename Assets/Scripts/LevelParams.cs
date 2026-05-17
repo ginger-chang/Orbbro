@@ -15,12 +15,25 @@ public class LevelParams
     };
 
     private static readonly int[] _scoreGoals = {
-        3_000,   3_000,                              // L1, L2
-        7_000,   10_000,  40_000,                    // L3, L4, L5 (boss)
-        20_000,  26_000,  34_000,  45_000,  200_000, // L6-L9, L10 (boss)
-        75_000,  100_000, 130_000, 170_000, 800_000, // L11-L14, L15 (boss)
-        300_000, 390_000, 510_000, 660_000, 3_000_000, // L16-L19, L20 (boss)
+        3_000,   3_000,                               // L1, L2
+        4_000,   6_000,   18_000,                     // L3, L4, L5 (boss)
+        9_000,   12_000,  15_000,  20_000,  60_000,   // L6-L9, L10 (boss)
+        28_000,  36_000,  47_000,  62_000,  180_000,  // L11-L14, L15 (boss)
+        85_000,  110_000, 145_000, 190_000, 480_000,  // L16-L19, L20 (boss)
     };
+
+    // L21-50: anchor at L19 goal (190k), grow 4% per level.
+    // L51+:   anchor at L50 regular goal, grow 2.5% per level.
+    // Boss levels (every 5th): ×2.5, timer +15s.
+    private const float L19Anchor   = 190_000f;
+    private const float EarlyRate   = 1.04f;    // L21-50
+    private const float LateRate    = 1.025f;   // L51+
+    private const float BossMulti   = 2.5f;
+    private const float BossTimeBonus = 15f;
+
+    // Pre-computed so the L50→L51 boundary is seamless.
+    private static readonly float L50RegularGoal =
+        L19Anchor * Mathf.Pow(EarlyRate, 50 - 19);
 
     public LevelParams(int level)
     {
@@ -33,14 +46,25 @@ public class LevelParams
             return;
         }
 
-        // L21+: base goal scales 25% per level from the L19 anchor (660,000).
-        // Boss levels (every 5th) get ×3.5 and a longer timer.
         bool isBoss = level % 5 == 0;
-        float regularGoal = 660_000f * Mathf.Pow(1.25f, level - 19);
 
-        timeLimit = isBoss ? 59f : 44f;
+        float regularGoal;
+        float baseTime;
+
+        if (level <= 50)
+        {
+            regularGoal = L19Anchor * Mathf.Pow(EarlyRate, level - 19);
+            baseTime    = 44f;
+        }
+        else
+        {
+            regularGoal = L50RegularGoal * Mathf.Pow(LateRate, level - 50);
+            baseTime    = 40f;
+        }
+
+        timeLimit = isBoss ? baseTime + BossTimeBonus : baseTime;
         scoreGoal = isBoss
-            ? Mathf.RoundToInt(regularGoal * 3.5f)
+            ? Mathf.RoundToInt(regularGoal * BossMulti)
             : Mathf.RoundToInt(regularGoal);
     }
 }

@@ -47,10 +47,22 @@ public class ScoreManager : MonoBehaviour
     {
         Diamonds = PlayerPrefs.GetInt("Diamonds", 0);
         if (diamondText != null) diamondText.text = $"Diamonds: {Diamonds}";
+
+        // Keep combo text above dynamically-sorted orb fall canvases (sortingOrder 10/11).
+        if (comboText != null)
+        {
+            var c = comboText.gameObject.AddComponent<Canvas>();
+            c.overrideSorting = true;
+            c.sortingOrder = 20;
+            comboText.gameObject.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+        }
     }
 
     public static int GetHighScore(GameMode mode) =>
         PlayerPrefs.GetInt($"HighScore_{mode}", 0);
+
+    public static int GetHighLevel(GameMode mode) =>
+        PlayerPrefs.GetInt($"HighLevel_{mode}", 0);
 
     public void CollectDiamonds(int count)
     {
@@ -60,10 +72,13 @@ public class ScoreManager : MonoBehaviour
         if (diamondText != null) diamondText.text = $"Diamonds: {Diamonds}";
     }
 
+    private string _highLevelKey;
+
     public void ResetForNewGame(GameMode mode, SkillManager skillManager = null)
     {
         _skillManager   = skillManager;
         _highScoreKey   = $"HighScore_{mode}";
+        _highLevelKey   = $"HighLevel_{mode}";
 
         comboMultiplier = 1.3f + (skillManager?.ComboMultiplierBonus ?? 0f);
         iterMultiplier  = 1.2f;
@@ -243,6 +258,13 @@ public void StartTimerWarning()
     private void AdvanceLevel()
     {
         SetupLevel(CurrentLevel + 1);
+
+        if (_highLevelKey != null && CurrentLevel > PlayerPrefs.GetInt(_highLevelKey, 0))
+        {
+            PlayerPrefs.SetInt(_highLevelKey, CurrentLevel);
+            PlayerPrefs.Save();
+        }
+
         OnLevelGoalReached?.Invoke();
     }
 
