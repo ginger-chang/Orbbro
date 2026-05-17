@@ -118,8 +118,16 @@ public class UIManager : MonoBehaviour
     private void SetModeButtonText(TextMeshProUGUI label, string modeName, GameMode mode)
     {
         if (label == null) return;
-        int hl = ScoreManager.GetHighLevel(mode);
-        label.text = hl > 0 ? $"{modeName}\n<size=70%>Highest Level: {hl}</size>" : modeName;
+        if (mode == GameMode.Endless)
+        {
+            int hs = ScoreManager.GetHighScore(mode);
+            label.text = hs > 0 ? $"{modeName}\n<size=70%>Best Score: {hs}</size>" : modeName;
+        }
+        else
+        {
+            int hl = ScoreManager.GetHighLevel(mode);
+            label.text = hl > 0 ? $"{modeName}\n<size=70%>Highest Level: {hl}</size>" : modeName;
+        }
     }
 
     public void SetTimer(bool active)
